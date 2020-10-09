@@ -49,7 +49,7 @@ PIPELINE_PCM_ADD(sof/pipe-low-latency-playback.m4,
 
 # Low Latency capture pipeline 2 on PCM 0 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 	2, 0, 2, s32le,
 	1000, 0, 0,
 	48000, 48000, 48000)
@@ -63,7 +63,7 @@ PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 
 # Low Latency capture pipeline 4 on PCM 1 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 	4, 1, 2, s32le,
 	1000, 0, 0,
 	48000, 48000, 48000)
@@ -77,7 +77,7 @@ PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
 
 # Low Latency capture pipeline 6 on PCM 2 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-#PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+#PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 #	6, 2, 2, s32le,
 #	1000, 0, 0,
 #	48000, 48000, 48000)
@@ -91,7 +91,7 @@ PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 
 # Low Latency capture pipeline 8 on PCM 3 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 	8, 3, 2, s32le,
 	1000, 0, 0,
 	48000, 48000, 48000)
@@ -105,7 +105,7 @@ PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
 
 # Low Latency capture pipeline 10 on PCM 4 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-#PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+#PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 #	10, 4, 2, s32le,
 #	1000, 0, 0,
 #	48000, 48000, 48000)
@@ -119,7 +119,7 @@ PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 
 # Low Latency capture pipeline 12 on PCM 5 using max 2 channels of s16le.
 # 1000us deadline on core 0 with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 	12, 5, 2, s32le,
 	1000, 0, 0,
 	48000, 48000, 48000)
