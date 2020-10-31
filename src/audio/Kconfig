@@ -334,15 +334,6 @@ config CADENCE_CODEC
 		files specific to CADENCE base codecs.
 endif
 
-config COMP_WAVES
-	bool "Waves"
-	default need
-	help
-		Enables custom module that implements MaxxEffect API.
-		This custom module requires MaxxEffect API and pre-compiled library.
-		Library linkage is not added yet, depends on adding sources into /audio/waves/Dummy/.
-		MaxxEffect API should be added into /audio/waves/MaxxEffect.
-
 endmenu # "Audio components"
 
 menu "Data formats"
