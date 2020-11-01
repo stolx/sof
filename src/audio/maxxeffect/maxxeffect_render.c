@@ -17,7 +17,7 @@
 static const struct comp_driver me_comp;
 
 /* e72c7109-f69c-4bf3-b971-574156455300 */
-DECLARE_SOF_RT_UUID("maxxeffect_reder", me_uuid, 0xe72c7109, 0xf69c, 0x4bf3,
+DECLARE_SOF_RT_UUID("maxxeffect_render", me_uuid, 0xe72c7109, 0xf69c, 0x4bf3,
 					0xb9, 0x71, 0x57, 0x41, 0x56, 0x45, 0x53, 0x00);
 
 DECLARE_TR_CTX(me_trace, SOF_UUID(me_uuid), LOG_LEVEL_INFO);
