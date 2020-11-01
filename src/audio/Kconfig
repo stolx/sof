@@ -334,6 +334,15 @@ config CADENCE_CODEC
 		files specific to CADENCE base codecs.
 endif
 
+config COMP_MAXXEFFECT
+	bool "MaxxEffect"
+	default y
+	help
+		Enables component that implements MaxxEffect API.
+		Only render (playback) component is implemented at a moment.
+		Requires additional pre-compiled static library with MaxxEffect API implemented.
+		Requires include path to MaxxEffect API definition.
+
 endmenu # "Audio components"
 
 menu "Data formats"
