@@ -76,44 +76,44 @@ fi
 rm volume_out.raw vol.log
 
 # test with src
-echo "=========================================================="
-echo "test src with ./src_run.sh 32 32 44100 48000 zeros_in.raw src_out.raw"
-if ./src_run.sh 32 32 44100 48000 zeros_in.raw src_out.raw &>src.log; then
-  echo "src test passed!"
-else
-  echo "src test failed!"
-  cat src.log
-  exit 1
-fi
+# echo "=========================================================="
+# echo "test src with ./src_run.sh 32 32 44100 48000 zeros_in.raw src_out.raw"
+# if ./src_run.sh 32 32 44100 48000 zeros_in.raw src_out.raw &>src.log; then
+#   echo "src test passed!"
+# else
+#   echo "src test failed!"
+#   cat src.log
+#   exit 1
+# fi
 
-if comparesize "$(srcsize ${INPUT_FILE_SIZE} 44100 48000)" "$(filesize src_out.raw)";then
-  echo "src_out size check passed!"
-else
-  echo "src_out size check failed!"
-  cat src.log
-  exit 1
-fi
-rm src_out.raw src.log
+# if comparesize "$(srcsize ${INPUT_FILE_SIZE} 44100 48000)" "$(filesize src_out.raw)";then
+#   echo "src_out size check passed!"
+# else
+#   echo "src_out size check failed!"
+#   cat src.log
+#   exit 1
+# fi
+# rm src_out.raw src.log
 
-# test with eq
-echo "=========================================================="
-echo "test eqiir with ./eqiir_run.sh 16 16 48000 zeros_in.raw eqiir_out.raw"
-if ./eqiir_run.sh 16 16 48000 zeros_in.raw eqiir_out.raw &>eqiir.log; then
-  echo "eqiir test passed!"
-else
-  echo "eqiir test failed!"
-  cat eqiir.log
-  exit 1
-fi
+# # test with eq
+# echo "=========================================================="
+# echo "test eqiir with ./eqiir_run.sh 16 16 48000 zeros_in.raw eqiir_out.raw"
+# if ./eqiir_run.sh 16 16 48000 zeros_in.raw eqiir_out.raw &>eqiir.log; then
+#   echo "eqiir test passed!"
+# else
+#   echo "eqiir test failed!"
+#   cat eqiir.log
+#   exit 1
+# fi
 
 
-if comparesize $INPUT_FILE_SIZE "$(filesize eqiir_out.raw)"; then
-  echo "eqiir_out size check passed!"
-else
-  echo "eqiir_out size check failed!"
-  cat eqiir.log
-  exit 1
-fi
-rm eqiir_out.raw eqiir.log
+# if comparesize $INPUT_FILE_SIZE "$(filesize eqiir_out.raw)"; then
+#   echo "eqiir_out size check passed!"
+# else
+#   echo "eqiir_out size check failed!"
+#   cat eqiir.log
+#   exit 1
+# fi
+# rm eqiir_out.raw eqiir.log
 
 rm zeros_in.raw

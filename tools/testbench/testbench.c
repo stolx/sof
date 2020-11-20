@@ -30,6 +30,10 @@ DECLARE_SOF_TB_UUID("crossover", crossover_uuid, 0x948c9ad1, 0x806a, 0x4131,
 DECLARE_SOF_TB_UUID("tdfb", tdfb_uuid,  0xdd511749, 0xd9fa, 0x455c,
 		    0xb3, 0xa7, 0x13, 0x58, 0x56, 0x93, 0xf1, 0xaf);
 
+DECLARE_SOF_TB_UUID("codec_adapter", ca_uuid, 0xd8218443, 0x5ff3, 0x4a4c,
+		    0xb3, 0x88, 0x6c, 0xfe, 0x07, 0xb9, 0x56, 0xaa);
+
+
 #define TESTBENCH_NCH 2 /* Stereo */
 
 /* shared library look up table */
@@ -43,6 +47,7 @@ struct shared_lib_table lib_table[NUM_WIDGETS_SUPPORTED] = {
 	{"dcblock", "libsof_dcblock.so", SOF_COMP_DCBLOCK, NULL, 0, NULL},
 	{"crossover", "libsof_crossover.so", SOF_COMP_NONE, SOF_TB_UUID(crossover_uuid), 0, NULL},
 	{"tdfb", "libsof_tdfb.so", SOF_COMP_NONE, SOF_TB_UUID(tdfb_uuid), 0, NULL},
+	{"codec_adapter", "libsof_codec_adapter.so", SOF_COMP_NONE, SOF_TB_UUID(ca_uuid), 0, NULL},
 };
 
 /* main firmware context */

@@ -142,7 +142,41 @@ foreach(audio_module ${sof_audio_modules})
 	sof_audio_add_module(sof_${audio_module} "" ${${audio_module}_sources})
 
 	# compile for each optimization
-	foreach(opt ${available_optimizations})
-		sof_audio_add_module(sof_${audio_module}_${opt} "${${opt}_flags}" ${${audio_module}_sources})
-	endforeach()
+	#foreach(opt ${available_optimizations})
+	#	sof_audio_add_module(sof_${audio_module}_${opt} "${${opt}_flags}" ${${audio_module}_sources})
+	#endforeach()
 endforeach()
+
+
+if(1)
+	# adding codec_adapter not through a sof_audio_add_module function
+	# because sof_audio_add_module has no interface for includes
+	add_library(codec_adapter MODULE "")
+	target_link_libraries(codec_adapter PRIVATE sof_options)
+	target_link_libraries(codec_adapter PRIVATE -Wl,--export-dynamic)
+	target_compile_options(codec_adapter PRIVATE)
+
+	add_local_sources(codec_adapter
+		codec_adapter/codec_adapter.c
+		codec_adapter/codec/generic.c
+		codec_adapter/waves/waves.c
+		codec_adapter/waves/Dummy/Dummy.c
+		codec_adapter/waves/Dummy/Process/Dummy_Process.c
+		codec_adapter/waves/Dummy/Process/Dummy_Reset.c
+		codec_adapter/waves/Dummy/Initialize/Dummy_Effect_Initialize.c
+		codec_adapter/waves/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
+		codec_adapter/waves/Dummy/Control/Direct/Dummy_Coefficient.c
+		codec_adapter/waves/Dummy/Control/Direct/Dummy_Deferred.c
+		codec_adapter/waves/Dummy/Control/Direct/Dummy_Meters.c
+		codec_adapter/waves/Dummy/Control/Direct/Dummy_Parameter.c
+		codec_adapter/waves/Dummy/Control/Direct/Dummy_Revision.c
+		codec_adapter/waves/Dummy/Control/RPC/Dummy_RPC_Server.c)
+
+	target_include_directories(codec_adapter PRIVATE
+		codec_adapter/waves
+		codec_adapter/waves/Dummy)
+
+	sof_append_relative_path_definitions(codec_adapter)
+
+	install(TARGETS codec_adapter DESTINATION lib)
+endif()
