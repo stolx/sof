@@ -144,6 +144,7 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 {
 	int ret = 0;
 	int size;
+	int i;
 	struct codec_config *cfg;
 	void *data;
 	// struct codec_param *param;
@@ -165,7 +166,7 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 		goto ret;
 	}
 
-	for (int i = 0; i < size/4; i++)
+	for (i = 0; i < size/4; i++)
 		comp_dbg(dev, "apply_config() config[%02d] 0x%02x", i, ((char *)data)[i]);
 
 	//while (size > 0) {
