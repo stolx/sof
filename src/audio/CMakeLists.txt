@@ -118,12 +118,12 @@ macro(check_optimization opt_name flag extra_define)
 endmacro()
 
 # modules will be compiled only for flags supported by compiler
-check_optimization(sse42 -msse4.2 -DOPS_SSE42)
-check_optimization(avx -mavx -DOPS_AVX)
-check_optimization(avx2 -mavx2 -DOPS_AVX2)
-check_optimization(fma -mfma -DOPS_FMA)
-check_optimization(hifi2ep -mhifi2ep -DOPS_HIFI2EP)
-check_optimization(hifi3 -mhifi3 -DOPS_HIFI3)
+#check_optimization(sse42 -msse4.2 -DOPS_SSE42)
+#check_optimization(avx -mavx -DOPS_AVX)
+#check_optimization(avx2 -mavx2 -DOPS_AVX2)
+#check_optimization(fma -mfma -DOPS_FMA)
+#check_optimization(hifi2ep -mhifi2ep -DOPS_HIFI2EP)
+#check_optimization(hifi3 -mhifi3 -DOPS_HIFI3)
 
 set(sof_audio_modules volume src asrc eq-fir eq-iir dcblock crossover tdfb)
 
@@ -142,9 +142,9 @@ foreach(audio_module ${sof_audio_modules})
 	sof_audio_add_module(sof_${audio_module} "" ${${audio_module}_sources})
 
 	# compile for each optimization
-	#foreach(opt ${available_optimizations})
-	#	sof_audio_add_module(sof_${audio_module}_${opt} "${${opt}_flags}" ${${audio_module}_sources})
-	#endforeach()
+	foreach(opt ${available_optimizations})
+		sof_audio_add_module(sof_${audio_module}_${opt} "${${opt}_flags}" ${${audio_module}_sources})
+	endforeach()
 endforeach()
 
 
@@ -159,22 +159,21 @@ if(1)
 	add_local_sources(sof_codec_adapter
 		codec_adapter/codec_adapter.c
 		codec_adapter/codec/generic.c
-		codec_adapter/waves/waves.c
-		codec_adapter/waves/Dummy/Dummy.c
-		codec_adapter/waves/Dummy/Process/Dummy_Process.c
-		codec_adapter/waves/Dummy/Process/Dummy_Reset.c
-		codec_adapter/waves/Dummy/Initialize/Dummy_Effect_Initialize.c
-		codec_adapter/waves/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
-		codec_adapter/waves/Dummy/Control/Direct/Dummy_Coefficient.c
-		codec_adapter/waves/Dummy/Control/Direct/Dummy_Deferred.c
-		codec_adapter/waves/Dummy/Control/Direct/Dummy_Meters.c
-		codec_adapter/waves/Dummy/Control/Direct/Dummy_Parameter.c
-		codec_adapter/waves/Dummy/Control/Direct/Dummy_Revision.c
-		codec_adapter/waves/Dummy/Control/RPC/Dummy_RPC_Server.c)
+		codec_adapter/codec/waves.c
+		codec_adapter/maxxeffect_sof/Dummy/Dummy.c
+		codec_adapter/maxxeffect_sof/Dummy/Process/Dummy_Process.c
+		codec_adapter/maxxeffect_sof/Dummy/Process/Dummy_Reset.c
+		codec_adapter/maxxeffect_sof/Dummy/Initialize/Dummy_Effect_Initialize.c
+		codec_adapter/maxxeffect_sof/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/Direct/Dummy_Coefficient.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/Direct/Dummy_Deferred.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/Direct/Dummy_Meters.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/Direct/Dummy_Parameter.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/Direct/Dummy_Revision.c
+		codec_adapter/maxxeffect_sof/Dummy/Control/RPC/Dummy_RPC_Server.c)
 
 	target_include_directories(sof_codec_adapter PRIVATE
-		codec_adapter/waves
-		codec_adapter/waves/Dummy)
+		codec_adapter/maxxeffect_sof/Dummy/)
 
 	sof_append_relative_path_definitions(sof_codec_adapter)
 

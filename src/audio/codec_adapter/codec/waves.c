@@ -4,7 +4,6 @@
 //
 // Author: Oleksandr Strelchenko <oleksandr.strelchenko@waves.com>
 //
-
 #include "sof/audio/codec_adapter/codec/generic.h"
 #include "sof/audio/codec_adapter/codec/waves.h"
 
@@ -17,9 +16,6 @@
 #include "MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h"
 
 struct waves_codec_data {
-	// char name[LIB_NAME_MAX_LEN];
-	// void *self;
-	// void *mem_tabs;
 	uint32_t                sample_rate;		// [Hz]
 	uint32_t				buffer_bytes;		// bytes
 	uint32_t				buffer_samples;		// multichannel samples
@@ -35,6 +31,72 @@ struct waves_codec_data {
 	MaxxBuffer_t			i_buffer;
 	MaxxBuffer_t			o_buffer;
 };
+
+static uint32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
+{
+	uint32_t res;
+
+	switch (fmt) {
+	case MAXX_BUFFER_FORMAT_Q1_15:
+		res = 2;
+		break;
+	case MAXX_BUFFER_FORMAT_Q1_23:
+		res = 3;
+		break;
+	case MAXX_BUFFER_FORMAT_Q9_23:
+	case MAXX_BUFFER_FORMAT_Q1_31:
+	case MAXX_BUFFER_FORMAT_FLOAT:
+	case MAXX_BUFFER_FORMAT_Q5_27:
+		res = 4;
+		break;
+	default:
+		res = -1;
+		break;
+	}
+	return res;
+}
+
+static MaxxBuffer_Format_t sample_format_convert_sof_to_me(enum sof_ipc_frame fmt)
+{
+	MaxxBuffer_Format_t res;
+
+	switch (fmt) {
+	case SOF_IPC_FRAME_S16_LE:
+		res = MAXX_BUFFER_FORMAT_Q1_15;
+		break;
+	case SOF_IPC_FRAME_S24_4LE:
+		res = MAXX_BUFFER_FORMAT_Q9_23;
+		break;
+	case SOF_IPC_FRAME_S32_LE:
+		res = MAXX_BUFFER_FORMAT_Q1_31;
+		break;
+	case SOF_IPC_FRAME_FLOAT:
+		res = MAXX_BUFFER_FORMAT_FLOAT;
+		break;
+	default:
+		res = -1;
+		break;
+	}
+	return res;
+}
+
+static MaxxBuffer_Layout_t buffer_format_convert_sof_to_me(uint32_t fmt)
+{
+	MaxxBuffer_Layout_t res;
+
+	switch (fmt) {
+	case SOF_IPC_BUFFER_INTERLEAVED:
+		res = MAXX_BUFFER_LAYOUT_INTERLEAVED;
+		break;
+	case SOF_IPC_BUFFER_NONINTERLEAVED:
+		res = MAXX_BUFFER_LAYOUT_DEINTERLEAVED;
+		break;
+	default:
+		res = -1;
+		break;
+	}
+	return res;
+}
 
 int waves_codec_init(struct comp_dev *dev)
 {
@@ -126,72 +188,6 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 
 ret:
 	return ret;
-}
-
-static uint32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
-{
-	uint32_t res;
-
-	switch (fmt) {
-	case MAXX_BUFFER_FORMAT_Q1_15:
-		res = 2;
-		break;
-	case MAXX_BUFFER_FORMAT_Q1_23:
-		res = 3;
-		break;
-	case MAXX_BUFFER_FORMAT_Q9_23:
-	case MAXX_BUFFER_FORMAT_Q1_31:
-	case MAXX_BUFFER_FORMAT_FLOAT:
-	case MAXX_BUFFER_FORMAT_Q5_27:
-		res = 4;
-		break;
-	default:
-		res = -1;
-		break;
-	}
-	return res;
-}
-
-static MaxxBuffer_Format_t sample_format_convert_sof_to_me(enum sof_ipc_frame fmt)
-{
-	MaxxBuffer_Format_t res;
-
-	switch (fmt) {
-	case SOF_IPC_FRAME_S16_LE:
-		res = MAXX_BUFFER_FORMAT_Q1_15;
-		break;
-	case SOF_IPC_FRAME_S24_4LE:
-		res = MAXX_BUFFER_FORMAT_Q9_23;
-		break;
-	case SOF_IPC_FRAME_S32_LE:
-		res = MAXX_BUFFER_FORMAT_Q1_31;
-		break;
-	case SOF_IPC_FRAME_FLOAT:
-		res = MAXX_BUFFER_FORMAT_FLOAT;
-		break;
-	default:
-		res = -1;
-		break;
-	}
-	return res;
-}
-
-static MaxxBuffer_Layout_t buffer_format_convert_sof_to_me(uint32_t fmt)
-{
-	MaxxBuffer_Layout_t res;
-
-	switch (fmt) {
-	case SOF_IPC_BUFFER_INTERLEAVED:
-		res = MAXX_BUFFER_LAYOUT_INTERLEAVED;
-		break;
-	case SOF_IPC_BUFFER_NONINTERLEAVED:
-		res = MAXX_BUFFER_LAYOUT_DEINTERLEAVED;
-		break;
-	default:
-		res = -1;
-		break;
-	}
-	return res;
 }
 
 int waves_codec_prepare(struct comp_dev *dev)
