@@ -16,10 +16,10 @@
 #include "MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h"
 
 struct waves_codec_data {
-	uint32_t                sample_rate;		// [Hz]
-	uint32_t				buffer_bytes;		// bytes
-	uint32_t				buffer_samples;		// multichannel samples
-	uint32_t				sample_size_in_bytes;
+	uint32_t                sample_rate; // [Hz]
+	uint32_t                buffer_bytes; // bytes
+	uint32_t                buffer_samples; // multichannel samples
+	uint32_t                sample_size_in_bytes;
 	uint64_t                reserved;
 
 	MaxxEffect_t            *effect;
@@ -28,8 +28,8 @@ struct waves_codec_data {
 	MaxxStreamFormat_t      o_format;
 	MaxxStream_t            i_stream;
 	MaxxStream_t            o_stream;
-	MaxxBuffer_t			i_buffer;
-	MaxxBuffer_t			o_buffer;
+	MaxxBuffer_t            i_buffer;
+	MaxxBuffer_t            o_buffer;
 };
 
 static uint32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
@@ -112,8 +112,6 @@ int waves_codec_init(struct comp_dev *dev)
 		return -ENOMEM;
 	}
 	codec->private = waves_codec;
-	// waves_codec->self = NULL;
-	// waves_codec->mem_tabs = NULL;
 
 	status = MaxxEffect_GetEffectSize(&waves_codec->effect_size);
 	if (status) {
@@ -147,7 +145,6 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 	int i;
 	struct codec_config *cfg;
 	void *data;
-	// struct codec_param *param;
 	struct codec_data *codec = comp_get_codec(dev);
 	// struct waves_codec_data *waves_codec = codec->private;
 
@@ -303,7 +300,7 @@ int waves_codec_prepare(struct comp_dev *dev)
 	waves_codec->buffer_bytes = waves_codec->buffer_samples * src_fmt->channels *
 		waves_codec->sample_size_in_bytes;
 
-	status = MaxxEffect_Initialize(&waves_codec->effect_size, i_formats, 1, o_formats, 1);
+	status = MaxxEffect_Initialize(waves_codec->effect, i_formats, 1, o_formats, 1);
 
 	if (status) {
 		comp_err(dev, "waves_codec_prepare() error: MaxxEffect_Initialize() error");

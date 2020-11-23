@@ -57,8 +57,8 @@ cp ./inputs/audio_16.raw .
 
 # test with codec adapter
 echo "=========================================================="
-echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out.raw"
-if ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out.raw &>ca.log; then
+echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out_16.raw"
+if ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out_16.raw &>ca.log; then
   echo "codec_adapter test passed!"
 else
   echo "codec_adapter test failed!"
