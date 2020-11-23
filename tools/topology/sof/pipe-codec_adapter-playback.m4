@@ -2,68 +2,104 @@
 #
 # Pipeline Endpoints for connection are :-
 #
-#  host PCM_P --> B0 --> Volume 0 --> B1 --> sink DAI0
+#  host PCM_P --> B0 --> Codec Adapter --> B1 --> sink DAI0
 
 # Include topology builder
 include(`utils.m4')
 include(`buffer.m4')
 include(`pcm.m4')
-include(`codec_adapter.m4')
 include(`dai.m4')
-include(`mixercontrol.m4')
 include(`pipeline.m4')
+include(`codec_adapter.m4')
+include(`bytecontrol.m4')
+
+ifdef(`PP_CORE',`', `define(`PP_CORE', 1)')
 
 #
 # Controls
 #
 
-# Codec_adapter
-include(`amp_bytes.m4')
+# Post process setup config
+CONTROLBYTES_PRIV(PP_SETUP_CONFIG,
+`       bytes "0x53,0x4f,0x46,0x00,0x00,0x00,0x00,0x00,'
+`       0x5C,0x00,0x00,0x00,0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,'
+`       0x01,0x00,0x41,0x57,0x00,0x00,0x00,0x00,'
+`       0x80,0xBB,0x00,0x00,0x20,0x00,0x00,0x00,'
+`       0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,'
+`       0x0C,0x00,0x00,0x00,0x40,0x00,0x00,0x00,'
+`       0x01,0x00,0x00,0x00,0x0C,0x00,0x00,0x00,'
+`       0x80,0xBB,0x00,0x00,0x02,0x00,0x00,0x00,'
+`       0x0C,0x00,0x00,0x00,0x20,0x00,0x00,0x00,'
+`       0x03,0x00,0x00,0x00,0x0C,0x00,0x00,0x00,'
+`       0x01,0x00,0x00,0x00,0x04,0x00,0x00,0x00,'
+`       0x0C,0x00,0x00,0x00,0x02,0x00,0x00,0x00,'
+`       0x05,0x00,0x00,0x00,0x0C,0x00,0x00,0x00,'
+`       0x02,0x00,0x00,0x00"'
+)
 
-# Amp Bytes control with max value of 140
-# The max size needs to also take into account the space required to hold the control data IPC message
-# struct sof_ipc_ctrl_data requires 92 bytes
-# AMP priv in amp_bytes.m4 (ABI header (32 bytes) + 2 dwords) requires 40 bytes
-# Therefore at least 132 bytes are required for this kcontrol
-# Any value lower than that would end up in a topology load error
-C_CONTROLBYTES(AMP, PIPELINE_ID,
-     CONTROLBYTES_OPS(bytes, 258 binds the control to bytes get/put handlers, 258, 258),
-     CONTROLBYTES_EXTOPS(258 binds the control to bytes get/put handlers, 258, 258),
-     , , ,
-     CONTROLBYTES_MAX(, 140),
-     ,
-     AMP_priv)
+# Post process Bytes control for setup config
+C_CONTROLBYTES(Post Process Setup Config, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(void, 300),
+        ,
+        PP_SETUP_CONFIG)
+
+# Post process runtime params
+CONTROLBYTES_PRIV(PP_RUNTIME_PARAMS,
+`       bytes "0x53,0x4f,0x46,0x00,0x01,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"'
+)
+
+# Post process Bytes control for runtime config
+C_CONTROLBYTES(Post Process Runtime Params, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(void, 157),
+        ,
+        PP_RUNTIME_PARAMS)
+
+
 
 #
 # Components and Buffers
 #
 
-# Host "Passthrough Playback" PCM
+# Host "Playback with post process" PCM
 # with 2 sink and 0 source periods
-W_PCM_PLAYBACK(PCM_ID, Passthrough Playback, 2, 0, SCHEDULE_CORE)
+W_PCM_PLAYBACK(PCM_ID, Passthrough Playback, DAI_PERIODS, 0, SCHEDULE_CORE)
 
-# "Volume" has 2 source and x sink periods
-N_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, 2, DEF_PGA_CONF, SCHEDULE_CORE,
-	LIST(`		', "PIPELINE_ID Master Playback Volume"))
+
+# Codec Adapter
+W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
+        LIST(`          ', "Post Process Setup Config"))
+#        LIST(`          ', "Post Process Setup Config", "Post Process Runtime Params"))
 
 # Playback Buffers
-W_BUFFER(0, COMP_BUFFER_SIZE(2,
-	COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
-	PLATFORM_HOST_MEM_CAP, SCHEDULE_CORE)
+W_BUFFER(0, COMP_BUFFER_SIZE(DAI_PERIODS,
+    COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
+    PLATFORM_HOST_MEM_CAP, SCHEDULE_CORE)
 W_BUFFER(1, COMP_BUFFER_SIZE(DAI_PERIODS,
-	COMP_SAMPLE_SIZE(DAI_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
-	PLATFORM_DAI_MEM_CAP, SCHEDULE_CORE)
+    COMP_SAMPLE_SIZE(DAI_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
+    PLATFORM_DAI_MEM_CAP, SCHEDULE_CORE)
+
 
 #
 # Pipeline Graph
 #
-#  host PCM_P --> B0 --> codec_adapter --> B1 --> sink DAI0
+#  host PCM_P --> B0 --> CODEC_ADAPTER -> B1 --> sink DAI0
 
-P_GRAPH(pipe-pass-vol-playback-PIPELINE_ID, PIPELINE_ID,
-	LIST(`		',
-	`dapm(N_BUFFER(0), N_PCMP(PCM_ID))',
-	`dapm(N_CODEC_ADAPTER(0), N_BUFFER(0))',
-	`dapm(N_BUFFER(1), N_PGA(0))'))
+P_GRAPH(pipe-pass-playback-PIPELINE_ID, PIPELINE_ID,
+    LIST(`      ',
+    `dapm(N_BUFFER(0), N_PCMP(PCM_ID))',
+    `dapm(N_CODEC_ADAPTER(0), N_BUFFER(0))',
+    `dapm(N_BUFFER(1), N_CODEC_ADAPTER(0))'))
 
 #
 # Pipeline Source and Sinks
@@ -74,9 +110,6 @@ indir(`define', concat(`PIPELINE_PCM_', PIPELINE_ID), Passthrough Playback PCM_I
 
 #
 # PCM Configuration
-
 #
-PCM_CAPABILITIES(Passthrough Playback PCM_ID, CAPABILITY_FORMAT_NAME(PIPELINE_FORMAT), PCM_MIN_RATE, PCM_MAX_RATE, 2, PIPELINE_CHANNELS, 2, 16, 192, 16384, 65536, 65536)
 
-undefine(`DEF_PGA_TOKENS')
-undefine(`DEF_PGA_CONF')
+PCM_CAPABILITIES(Passthrough Playback PCM_ID, CAPABILITY_FORMAT_NAME(PIPELINE_FORMAT), PCM_MIN_RATE, PCM_MAX_RATE, 2, PIPELINE_CHANNELS, 2, 16, 192, 16384, 65536, 65536)

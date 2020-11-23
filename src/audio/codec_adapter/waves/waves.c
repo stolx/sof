@@ -80,7 +80,7 @@ out:
 
 static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 {
-	int ret;
+	int ret = 0;
 	int size;
 	struct codec_config *cfg;
 	void *data;
@@ -106,7 +106,7 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 	for (int i = 0; i < size/4; i++)
 		comp_dbg(dev, "apply_config() config[%02d] 0x%02x", i, ((char *)data)[i]);
 
-	while (size > 0) {
+	//while (size > 0) {
 		// Here set coefficient
 
 		// param = data;
@@ -120,7 +120,7 @@ static int apply_config(struct comp_dev *dev, enum codec_cfg_type type)
 		// }
 		// data = (char *)data + param->size;
 		// size -= param->size;
-	}
+	//}
 
 	comp_dbg(dev, "apply_config() done");
 
@@ -302,7 +302,7 @@ int waves_codec_prepare(struct comp_dev *dev)
 	waves_codec->i_format.samplesLayout = buffer_format;
 	waves_codec->o_format = waves_codec->i_format;
 	waves_codec->sample_size_in_bytes = sample_convert_format_to_bytes(sample_format);
-	waves_codec->buffer_samples = src_fmt->rate / 100; // 10 ms io buffers
+	waves_codec->buffer_samples = src_fmt->rate * 2 / 1000; // 2 ms io buffers
 	waves_codec->buffer_bytes = waves_codec->buffer_samples * src_fmt->channels *
 		waves_codec->sample_size_in_bytes;
 

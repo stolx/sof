@@ -47,30 +47,33 @@ function srcsize() {
 SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
 SOF_DIR=$SCRIPTS_DIR/../
 TESTBENCH_DIR=${SOF_DIR}/tools/test/audio
-INPUT_FILE_SIZE=10240
+INPUT_FILE_SIZE=274180
 
 cd "$TESTBENCH_DIR"
 rm -rf ./*.raw
 cp ./inputs/audio_16.raw .
 # create input zeros raw file
-head -c ${INPUT_FILE_SIZE} < /dev/zero > zeros_in.raw
+# head -c ${INPUT_FILE_SIZE} < /dev/zero > zeros_in.raw
 
 # test with codec adapter
 echo "=========================================================="
-echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 zeros_in.raw volume_out.raw"
-if ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out.raw &>vol.log; then
+echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out.raw"
+if ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out.raw &>ca.log; then
   echo "codec_adapter test passed!"
 else
   echo "codec_adapter test failed!"
-  cat vol.log
+  cat ca.log
   exit 1
 fi
 
-if comparesize ${INPUT_FILE_SIZE} "$(filesize volume_out.raw)"; then
+if comparesize ${INPUT_FILE_SIZE} "$(filesize codec_adapter_out.raw)"; then
   echo "codec_adapter_out size check passed!"
 else
   echo "codec_adapter_out size check failed!"
-  cat vol.log
+  cat ca.log
   exit 1
 fi
+
+
+
 # rm volume_out.raw vol.log
