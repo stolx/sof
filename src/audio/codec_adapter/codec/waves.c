@@ -7,13 +7,7 @@
 #include "sof/audio/codec_adapter/codec/generic.h"
 #include "sof/audio/codec_adapter/codec/waves.h"
 
-#include "MaxxEffect/MaxxEffect.h"
-#include "MaxxEffect/MaxxStream.h"
-#include "MaxxEffect/MaxxStatus.h"
-#include "MaxxEffect/Initialize/MaxxEffect_Initialize.h"
-#include "MaxxEffect/Process/MaxxEffect_Process.h"
-#include "MaxxEffect/Process/MaxxEffect_Reset.h"
-#include "MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h"
+#include "MaxxEffectAPI.h"
 
 struct waves_codec_data {
 	uint32_t                sample_rate; // [Hz]
