@@ -47,33 +47,57 @@ function srcsize() {
 SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
 SOF_DIR=$SCRIPTS_DIR/../
 TESTBENCH_DIR=${SOF_DIR}/tools/test/audio
-INPUT_FILE_SIZE=274180
+
 
 cd "$TESTBENCH_DIR"
-rm -rf ./*.raw
-cp ./inputs/audio_16.raw .
-# create input zeros raw file
-# head -c ${INPUT_FILE_SIZE} < /dev/zero > zeros_in.raw
 
-# test with codec adapter
+# remove .raw and .log files from test folder
+rm -rf ./*.raw
+rm -rf ./*.log
+
+# test codec adapter 16 bit
+INPUT_FILE=./inputs/audio_16.raw
+OUTPUT_FILE=./codec_adapter_out_16.raw
+LOG_FILE=./ca16.log
+
 echo "=========================================================="
-echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out_16.raw"
-if ./codec_adapter_run.sh 16 16 48000 audio_16.raw codec_adapter_out_16.raw &>ca.log; then
+echo "test codec adapter with ./codec_adapter_run.sh 16 16 48000 " $INPUT_FILE " " $OUTPUT_FILE
+if ./codec_adapter_run.sh 16 16 48000 $INPUT_FILE $OUTPUT_FILE &>$LOG_FILE; then
   echo "codec_adapter test passed!"
 else
   echo "codec_adapter test failed!"
-  cat ca.log
+  cat $LOG_FILE
   exit 1
 fi
-
-if comparesize ${INPUT_FILE_SIZE} "$(filesize codec_adapter_out.raw)"; then
+if comparesize "$(filesize $INPUT_FILE)" "$(filesize $OUTPUT_FILE)"; then
   echo "codec_adapter_out size check passed!"
 else
   echo "codec_adapter_out size check failed!"
-  cat ca.log
+  cat $LOG_FILE
   exit 1
 fi
 
+# test codec adapter 32 bit
+INPUT_FILE=./inputs/audio_32.raw
+OUTPUT_FILE=./codec_adapter_out_32.raw
+LOG_FILE=./ca32.log
+
+echo "=========================================================="
+echo "test codec adapter with ./codec_adapter_run.sh 32 32 48000 " $INPUT_FILE " " $OUTPUT_FILE
+if ./codec_adapter_run.sh 32 32 48000 $INPUT_FILE $OUTPUT_FILE &>$LOG_FILE; then
+  echo "codec_adapter test passed!"
+else
+  echo "codec_adapter test failed!"
+  cat $LOG_FILE
+  exit 1
+fi
+if comparesize "$(filesize $INPUT_FILE)" "$(filesize $OUTPUT_FILE)"; then
+  echo "codec_adapter_out size check passed!"
+else
+  echo "codec_adapter_out size check failed!"
+  cat $LOG_FILE
+  exit 1
+fi
 
 
 # rm volume_out.raw vol.log
