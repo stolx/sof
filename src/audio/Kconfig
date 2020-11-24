@@ -316,7 +316,7 @@ config COMP_TDFB
 
 config COMP_CODEC_ADAPTER
 	bool "Codec adapter"
-	default y
+	default n
 	help
 	  This component is an adapter between SoF components and any external third
 	  party codecs/libraries. In order to make use of it the library itself should
@@ -335,7 +335,7 @@ config CADENCE_CODEC
 
 config WAVES_CODEC
 	bool "Waves codec"
-	default y
+	default n
 	help
 		Select to include Waves codec. Waves codec implements MaxxEffect API.
 		API definition together with pre-compiled library is shared by Waves Audio Ltd.
