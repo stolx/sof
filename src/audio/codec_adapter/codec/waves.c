@@ -332,7 +332,7 @@ int waves_codec_prepare(struct comp_dev *dev)
 			goto err;
 		}
 
-		printf("[WAVES CE][MA]: %s\n", revision);
+		comp_info(dev, "[WAVES CE][MA]: %s", revision);
 	}
 
 	// allocate buffer for response
