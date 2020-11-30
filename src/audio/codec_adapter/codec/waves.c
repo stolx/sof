@@ -320,6 +320,21 @@ int waves_codec_prepare(struct comp_dev *dev)
 		goto err;
 	}
 
+	{
+		const char* revision = NULL;
+
+		status = MaxxEffect_Revision_Get(waves_codec->effect, &revision, NULL);
+
+		if (status) {
+			comp_err(dev, "waves_codec_prepare() error: MaxxEffect_Revision_Get() error %d",
+				status);
+			ret = -EIO;
+			goto err;
+		}
+
+		printf("[WAVES CE][MA]: %s\n", revision);
+	}
+
 	// allocate buffer for response
 	// SOF does not support getting infor from codec adapter right now
 	// response will be stored in internal buffer to be dumped into logs
