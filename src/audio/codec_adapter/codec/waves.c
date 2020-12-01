@@ -248,9 +248,10 @@ static int waves_effect_init(struct comp_dev *dev)
 		return status;
 	}
 
-	comp_dbg(dev, "waves_effect_init(): rate %d, channels %d, format %d, layout %d, frame %d",
+	comp_dbg(dev, "waves_effect_init(): rate %d, channels %d",
 		waves_codec->i_format.sampleRate,
-		waves_codec->i_format.numChannels,
+		waves_codec->i_format.numChannels);
+	comp_dbg(dev, "waves_effect_init(): format %d, layout %d, frame %d",
 		waves_codec->i_format.samplesFormat,
 		waves_codec->i_format.samplesLayout,
 		waves_codec->buffer_samples);
