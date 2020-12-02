@@ -111,12 +111,12 @@ macro(check_optimization opt_name flag extra_define)
 endmacro()
 
 # modules will be compiled only for flags supported by compiler
-check_optimization(sse42 -msse4.2 -DOPS_SSE42)
-check_optimization(avx -mavx -DOPS_AVX)
-check_optimization(avx2 -mavx2 -DOPS_AVX2)
-check_optimization(fma -mfma -DOPS_FMA)
-check_optimization(hifi2ep -mhifi2ep -DOPS_HIFI2EP)
-check_optimization(hifi3 -mhifi3 -DOPS_HIFI3)
+# check_optimization(sse42 -msse4.2 -DOPS_SSE42)
+# check_optimization(avx -mavx -DOPS_AVX)
+# check_optimization(avx2 -mavx2 -DOPS_AVX2)
+# check_optimization(fma -mfma -DOPS_FMA)
+# check_optimization(hifi2ep -mhifi2ep -DOPS_HIFI2EP)
+# check_optimization(hifi3 -mhifi3 -DOPS_HIFI3)
 
 set(sof_audio_modules volume src asrc eq-fir eq-iir dcblock crossover tdfb drc)
 
@@ -140,3 +140,8 @@ foreach(audio_module ${sof_audio_modules})
 		sof_audio_add_module(sof_${audio_module}_${opt} "${${opt}_flags}" ${${audio_module}_sources})
 	endforeach()
 endforeach()
+
+if(CONFIG_LIBRARY)
+	# this will add maxxeffect so library for SOF
+	add_subdirectory(codec_adapter/maxxeffect_sof)
+endif()
