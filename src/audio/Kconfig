@@ -327,6 +327,14 @@ config CADENCE_CODEC
 		Select for codecs which conforms to the Cadence API.
 		This will cause codec adapter component to include header
 		files specific to CADENCE base codecs.
+
+config WAVES_CODEC
+	bool "Waves codec"
+	default n
+	help
+		Select to include Waves codec. Waves codec implements MaxxEffect API.
+		API definition together with pre-compiled library is shared by Waves Audio Ltd.
+		If library is not provided will result in compilation error.
 endif
 endmenu # "Audio components"
 
