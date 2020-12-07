@@ -142,6 +142,27 @@ foreach(audio_module ${sof_audio_modules})
 endforeach()
 
 if(CONFIG_LIBRARY)
-	# this will add maxxeffect so library for SOF
-	add_subdirectory(codec_adapter/maxxeffect_sof)
+	set(DUMMY_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Dummy.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Process/Dummy_Process.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Process/Dummy_Reset.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Initialize/Dummy_Effect_Initialize.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Coefficient.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Deferred.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Meters.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Parameter.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Revision.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/RPC/Dummy_RPC_Server.c)
+
+	add_local_sources(sof codec_adapter/codec_adapter.c
+		codec_adapter/codec/waves.c
+		codec_adapter/codec/generic.c
+		${DUMMY_SOURCES})
+
+	# Waves interface needs relative path starting from parent directory of MaxxEffect folder
+	# Adding folder with Waves interface to includes
+	# to be fixed
+	target_include_directories(sof PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../include/sof/audio/waves)
+
 endif()
