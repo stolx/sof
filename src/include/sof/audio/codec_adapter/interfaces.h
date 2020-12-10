@@ -20,9 +20,7 @@
 #endif /* CONFIG_WAVES_CODEC */
 
 #define INTERFACE_ID_CADENCE        0xCADE01
-// temporary use INTERFACE_ID_CADENCE for Waves module
-// so same codec adapter startup payload will instantiate Waves
-#define INTERFACE_ID_WAVES          INTERFACE_ID_CADENCE //0x574101
+#define INTERFACE_ID_WAVES          0x574101
 
 /*****************************************************************************/
 /* Linked codecs interfaces						     */
