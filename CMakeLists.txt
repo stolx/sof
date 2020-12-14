@@ -185,6 +185,7 @@ target_link_libraries(sof PRIVATE sof_options)
 target_link_libraries(sof PRIVATE sof_ld_scripts)
 target_link_libraries(sof PRIVATE sof_ld_flags)
 target_link_libraries(sof PRIVATE sof_static_libraries)
+target_link_libraries(sof PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/audio/codec_adapter/maxxeffect_sof/lib/tigerlake/release/libMaxxChrome.a)
 
 sof_add_build_counter_rule()
 

@@ -20,7 +20,10 @@ set(DUMMY_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/codec/Dummy/Control/Direct/Dummy_Revision.c
     ${CMAKE_CURRENT_LIST_DIR}/codec/Dummy/Control/RPC/Dummy_RPC_Server.c)
 
-add_local_sources(sof codec/waves.c ${DUMMY_SOURCES})
+add_local_sources(sof codec/waves.c)
+
+#add_local_sources(sof ${DUMMY_SOURCES})
+
 # Waves interface needs relative path starting from parent directory of MaxxEffect folder
 # Adding folder with Waves interface to includes
 # to be fixed
