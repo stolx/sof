@@ -6,7 +6,7 @@
 //
 #include "sof/audio/codec_adapter/codec/generic.h"
 #include "sof/audio/codec_adapter/codec/waves.h"
-
+#include "Dummy/Dummy_Effect.h"
 
 static int32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
 {
@@ -80,14 +80,14 @@ static MaxxBuffer_Layout_t buffer_format_convert_sof_to_me(uint32_t fmt)
 	return res;
 }
 
-//static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_t len)
-//{
-//	// traces uint32_t array of len elements into debug messages
-//	uint32_t i;
-//
-//	for (i = 0; i < len; i++)
-//		comp_dbg(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
-//}
+static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_t len)
+{
+	// traces uint32_t array of len elements into debug messages
+	uint32_t i;
+
+	for (i = 0; i < len; i++)
+		comp_err(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
+}
 
 static void waves_codec_data_clear(struct waves_codec_data *waves_codec)
 {
@@ -220,10 +220,10 @@ static int waves_effect_init(struct comp_dev *dev)
 		return status;
 	}
 
-	comp_dbg(dev, "waves_effect_init(): rate %d, channels %d",
+	comp_err(dev, "waves_effect_init(): rate %d, channels %d",
 		waves_codec->i_format.sampleRate,
 		waves_codec->i_format.numChannels);
-	comp_dbg(dev, "waves_effect_init(): format %d, layout %d, frame %d",
+	comp_err(dev, "waves_effect_init(): format %d, layout %d, frame %d",
 		waves_codec->i_format.samplesFormat,
 		waves_codec->i_format.samplesLayout,
 		waves_codec->buffer_samples);
@@ -246,7 +246,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EIO;
 	}
 
-	comp_info(dev, "waves_effect_revision() %s", revision);
+	comp_err(dev, "waves_effect_revision() %s", revision);
 	return 0;
 }
 
@@ -296,7 +296,7 @@ static int waves_effect_allocate(struct comp_dev *dev)
 	codec->cpd.out_buff = waves_codec->o_buffer;
 	codec->cpd.out_buff_size = waves_codec->buffer_bytes;
 
-	comp_dbg(dev, "waves_effect_allocate(): response %d, i_buffer %d, o_buffer %d",
+	comp_err(dev, "waves_effect_allocate(): response %d, i_buffer %d, o_buffer %d",
 		waves_codec->response_max_bytes,
 		waves_codec->buffer_bytes,
 		waves_codec->buffer_bytes);
@@ -304,47 +304,86 @@ static int waves_effect_allocate(struct comp_dev *dev)
 	return 0;
 }
 
-//static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
-//{
-//	struct codec_config *cfg;
-//	struct codec_data *codec = comp_get_codec(dev);
-//	struct waves_codec_data *waves_codec = codec->private;
-//	uint32_t response_size = 0;
-//	MaxxStatus_t status;
-//
-//	comp_dbg(dev, "waves_codec_configure() start");
-//
-//	cfg = (type == CODEC_CFG_SETUP) ? &codec->s_cfg : &codec->r_cfg;
-//
-//	if (!cfg->avail || !cfg->size) {
-//		comp_err(dev, "waves_codec_configure() error: no config for type %d, avail %d, size %d",
-//			type, (unsigned int)cfg->avail, (unsigned int)cfg->size);
-//		return -EIO;
-//	}
-//
-//	comp_dbg(dev, "waves_codec_configure() trace config");
-//	trace_array(dev, (const uint32_t *)cfg->data, cfg->size / sizeof(uint32_t));
-//
-//	// at time of writing codec adapter does not support reading something from codec
-//	// so response is stored to internal structure and dumped into trace messages
-//
-//	status = MaxxEffect_Message(waves_codec->effect, cfg->data, cfg->size,
-//		waves_codec->response, &response_size);
-//	if (status) {
-//		comp_err(dev, "waves_codec_configure() error: MaxxEffect_Message() error %d:",
-//			status);
-//		return -EIO;
-//	}
-//
-//	if (response_size) {
-//		comp_dbg(dev, "waves_codec_configure() trace response");
-//		trace_array(dev, (const uint32_t *)waves_codec->response,
-//			response_size / sizeof(uint32_t));
-//	}
-//
-//	comp_dbg(dev, "waves_codec_configure() done");
-//	return 0;
-//}
+static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
+{
+	struct codec_config *cfg;
+	struct codec_data *codec = comp_get_codec(dev);
+	struct waves_codec_data *waves_codec = codec->private;
+	struct codec_param *param;
+	uint32_t index;
+	uint32_t param_number = 0;
+
+	comp_err(dev, "waves_codec_configure() start");
+
+	cfg = (type == CODEC_CFG_SETUP) ? &codec->s_cfg : &codec->r_cfg;
+
+	comp_err(dev, "waves_codec_configure() type %d, size %d", type, cfg->size);
+
+	if (!cfg->avail || !cfg->size) {
+		comp_err(dev, "waves_codec_configure() error: no config for type %d, avail %d, size %d",
+			type, (unsigned int)cfg->avail, (unsigned int)cfg->size);
+		return -EIO;
+	}
+
+	// incoming data in cfg->data is arranged according to struct codec_param
+	// there migh be more than one struct codec_param inside cfg->data, glued back to back
+	for (index = 0; index < cfg->size; param_number++) {
+		uint32_t response_size = 0;
+		uint32_t param_data_size;
+		MaxxStatus_t status;
+
+		param = (struct codec_param *)((char *)cfg->data + index);
+		param_data_size = param->size - sizeof(param->size) - sizeof(param->id);
+
+		comp_err(dev, "waves_codec_configure() PARAM %02d T %02d L %04d V",
+			param_number, param->id, param->size);
+
+		trace_array(dev, (const uint32_t *)param->data, param_data_size / sizeof(uint32_t));
+
+		status = MaxxEffect_Message(waves_codec->effect, param->data, param_data_size,
+			waves_codec->response, &response_size);
+		if (status) {
+			comp_err(dev, "waves_codec_configure() error: MaxxEffect_Message() error %d:",
+				status);
+			return -EIO;
+		}
+
+		// at time of writing codec adapter does not support getting something from codec
+		// so response is stored to internal structure and dumped into trace messages
+		if (response_size) {
+			comp_err(dev, "waves_codec_configure() trace response");
+			trace_array(dev, (const uint32_t *)waves_codec->response,
+				response_size / sizeof(uint32_t));
+		}
+
+		index += param->size;
+	}
+
+	comp_err(dev, "waves_codec_configure() done");
+	return 0;
+}
+
+static int waves_effect_setup_config(struct comp_dev *dev)
+{
+	// apply setup config if present
+	struct codec_data *codec = comp_get_codec(dev);
+	int ret = 0;
+
+	if (!codec->s_cfg.avail && !codec->s_cfg.size) {
+		comp_err(dev, "waves_effect_startup_config(): no setup config");
+		return 0;
+	}
+
+	if (!codec->s_cfg.avail) {
+		comp_warn(dev, "waves_effect_startup_config(): no new setup config, using old");
+		codec->s_cfg.avail = true;
+	}
+
+	ret = 0;//waves_effect_config(dev, CODEC_CFG_SETUP);
+	codec->s_cfg.avail = false;
+
+	return ret;
+}
 
 int waves_codec_init(struct comp_dev *dev)
 {
@@ -353,7 +392,7 @@ int waves_codec_init(struct comp_dev *dev)
 	MaxxStatus_t status = 0;
 	int ret = 0;
 
-	comp_dbg(dev, "waves_codec_init() start");
+	comp_err(dev, "waves_codec_init() start");
 
 	waves_codec = codec_allocate_memory(dev, sizeof(struct waves_codec_data), 16);
 	if (!waves_codec) {
@@ -383,9 +422,9 @@ int waves_codec_init(struct comp_dev *dev)
 		goto err;
 	}
 
-	comp_dbg(dev, "waves_codec_init(): allocated %d bytes for effect",
+	comp_err(dev, "waves_codec_init(): allocated %d bytes for effect",
 		waves_codec->effect_size);
-	comp_dbg(dev, "waves_codec_init() done");
+	comp_err(dev, "waves_codec_init() done");
 	return 0;
 
 err:
@@ -396,9 +435,8 @@ err:
 int waves_codec_prepare(struct comp_dev *dev)
 {
 	int ret = 0;
-	struct codec_data *codec = comp_get_codec(dev);
 
-	comp_dbg(dev, "waves_codec_prepare() start");
+	comp_err(dev, "waves_codec_prepare() start");
 
 	ret = waves_effect_check(dev);
 	if (ret)
@@ -416,22 +454,11 @@ int waves_codec_prepare(struct comp_dev *dev)
 	if (ret)
 		goto err;
 
-	if (!codec->s_cfg.avail && !codec->s_cfg.size) {
-		comp_err(dev, "waves_codec_prepare() error %x: no setup configuration available!");
-		ret = -EIO;
+	ret = waves_effect_setup_config(dev);
+	if (ret)
 		goto err;
-	} else if (!codec->s_cfg.avail) {
-		comp_info(dev, "waves_codec_prepare(): no new setup config, using the old");
-		codec->s_cfg.avail = true;
-	}
-	//ret = waves_effect_config(dev, CODEC_CFG_SETUP);
-	if (ret) {
-		comp_err(dev, "waves_codec_prepare() error %x: failed to apply setup config", ret);
-		goto err;
-	}
-	codec->s_cfg.avail = false;
 
-	comp_dbg(dev, "waves_codec_prepare() done");
+	comp_err(dev, "waves_codec_prepare() done");
 	return 0;
 
 err:
@@ -452,13 +479,14 @@ int waves_codec_process(struct comp_dev *dev)
 	MaxxStatus_t status;
 	uint32_t num_input_samples = waves_codec->buffer_samples;
 
+
 	// here input buffer should always be filled up as requested
 	// since noone updates it`s size except code in prepare
 	// kinda odd, but this is how codec adapter operates
 	// on the other hand there is available/produced counters in cpd, so we check them anyways
 
 	if (codec->cpd.avail != waves_codec->buffer_bytes) {
-		comp_warn(dev, "waves_codec_process(): input buffer %d is not full %d",
+		comp_err(dev, "waves_codec_process(): input buffer %d is not full %d",
 			codec->cpd.avail, waves_codec->buffer_bytes);
 		num_input_samples = codec->cpd.avail /
 			(waves_codec->sample_size_in_bytes * waves_codec->i_format.numChannels);
@@ -474,6 +502,21 @@ int waves_codec_process(struct comp_dev *dev)
 	waves_codec->o_stream.numProcessedSamples = 0;
 	waves_codec->o_stream.maxNumSamples = waves_codec->buffer_samples;
 
+// I am not a dummy any more
+//	{
+//		Dummy_Effect_t *de = (Dummy_Effect_t *)waves_codec->effect;
+//
+//		comp_err(dev, "waves_codec_process() dummy parse");
+//		if (de->coeffs.gain) {
+//			comp_err(dev, "waves_codec_process() bypass %d, GAIN NOT ZERO %d,",
+//				de->coeffs.bypass, de->coeffs.gain);
+//		}
+//		else {
+//			comp_err(dev, "waves_codec_process() bypass %d, GAIN IS ZERO %d,",
+//				de->coeffs.bypass, de->coeffs.gain);
+//		}
+//
+//	}
 	status = MaxxEffect_Process(waves_codec->effect, i_streams, o_streams);
 	if (status) {
 		ret = status;
@@ -493,7 +536,15 @@ err:
 
 int waves_codec_apply_config(struct comp_dev *dev)
 {
-	return 0;//waves_effect_config(dev, CODEC_CFG_RUNTIME);
+	int res;
+
+	comp_err(dev, "waves_codec_apply_config() start");
+
+	res =  waves_effect_config(dev, CODEC_CFG_RUNTIME);
+
+	comp_err(dev, "waves_codec_apply_config() done");
+
+	return res;
 }
 
 int waves_codec_reset(struct comp_dev *dev)
@@ -503,14 +554,14 @@ int waves_codec_reset(struct comp_dev *dev)
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 
-	comp_dbg(dev, "waves_codec_reset() start");
+	comp_err(dev, "waves_codec_reset() start");
 
 	status = MaxxEffect_Reset(waves_codec->effect);
 	if (status) {
 		comp_err(dev, "waves_codec_reset(): MaxxEffect_Reset error %d", status);
 		ret = status;
 	}
-	comp_dbg(dev, "waves_codec_reset() done");
+	comp_err(dev, "waves_codec_reset() done");
 
 	return ret;
 }
@@ -520,7 +571,7 @@ int waves_codec_free(struct comp_dev *dev)
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 
-	comp_dbg(dev, "waves_codec_free() start");
+	comp_err(dev, "waves_codec_free() start");
 
 	if (waves_codec->effect)
 		codec_free_memory(dev, waves_codec->effect);
@@ -531,7 +582,7 @@ int waves_codec_free(struct comp_dev *dev)
 	if (waves_codec->o_buffer)
 		codec_free_memory(dev, waves_codec->o_buffer);
 
-	comp_dbg(dev, "waves_codec_free() done");
+	comp_err(dev, "waves_codec_free() done");
 
 	return 0;
 }

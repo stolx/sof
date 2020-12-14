@@ -19,54 +19,40 @@ ifdef(`PP_CORE',`', `define(`PP_CORE', 1)')
 # Controls
 #
 
-# structure of config message
-#[00] SOF MAGIC
-#[01] -
-#[02] -
-#[03] ABI
-#[04] -
-#[05] -
-#[06] -
-#[07] -
-#[08] CODEC ADAPTER INTERFACE_ID
-#[09] CODEC ADAPTER RESERVED
-#[10] CODEC ADAPTER SAMPLE RATE
-#[11] CODEC ADAPTER SAMPLE WIDTH
-#[12] CODEC ADAPTER CHANNELS
-#[13] FIRST WORD OF CUSTOM CODEC DATA
-
-# configuration below holds default settings for Dummy PP, Gain=1
+# configuration below holds setup config for codec adapter,
+# for custom codec it holds bypass 0, since no config for custom codec is not supported
 
 # Post process setup config
 CONTROLBYTES_PRIV(PP_SETUP_CONFIG,
 `       bytes "0x53,0x4f,0x46,0x00,'
 `       0x00,0x00,0x00,0x00,'
-`       0x14,0x00,0x00,0x00,'
+`       0x2C,0x00,0x00,0x00,'
 `       0x00,0x10,0x00,0x03,'
 `       0x00,0x00,0x00,0x00,'
 `       0x00,0x00,0x00,0x00,'
 `       0x00,0x00,0x00,0x00,'
 `       0x00,0x00,0x00,0x00,'
-`       0x00,0x01,0x41,0x57,'
+
+`       0x01,0x01,0x41,0x57,'
 `       0x00,0x00,0x00,0x00,'
 `       0x80,0xBB,0x00,0x00,'
 `       0x20,0x00,0x00,0x00,'
 `       0x02,0x00,0x00,0x00,'
 
-`       0x03,0x00,0x00,0x00,'
-`       0x0c,0x00,0x00,0x00,'
-
+`       0x01,0x00,0x00,0x00,'
+`       0x10,0x00,0x00,0x00,'
+`       0x02,0x00,0x00,0x00,'
 `       0x02,0x00,0x00,0x00,'
 `       0x01,0x00,0x00,0x00,'
 `       0x01,0x00,0x00,0x00"'
 )
 
 # Post process Bytes control for setup config
-C_CONTROLBYTES(Post Process Setup Config, PIPELINE_ID,
+C_CONTROLBYTES(MaxxChrome Setup, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
-        CONTROLBYTES_MAX(void, 300),
+        CONTROLBYTES_MAX(, 2000),
         ,
         PP_SETUP_CONFIG)
 
@@ -83,11 +69,11 @@ CONTROLBYTES_PRIV(PP_RUNTIME_PARAMS,
 )
 
 # Post process Bytes control for runtime config
-C_CONTROLBYTES(Post Process Runtime Params, PIPELINE_ID,
+C_CONTROLBYTES(MaxxChrome Runtime, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
-        CONTROLBYTES_MAX(void, 157),
+        CONTROLBYTES_MAX(, 2000),
         ,
         PP_RUNTIME_PARAMS)
 
@@ -104,8 +90,7 @@ W_PCM_PLAYBACK(PCM_ID, Passthrough Playback, DAI_PERIODS, 0, SCHEDULE_CORE)
 
 # Codec Adapter
 W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
-        LIST(`          ', "Post Process Setup Config"))
-#        LIST(`          ', "Post Process Setup Config", "Post Process Runtime Params"))
+        LIST(`          ', "MaxxChrome Setup", "MaxxChrome Runtime"))
 
 # Playback Buffers
 W_BUFFER(0, COMP_BUFFER_SIZE(DAI_PERIODS,
