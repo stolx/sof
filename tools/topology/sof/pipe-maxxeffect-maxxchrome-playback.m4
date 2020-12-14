@@ -52,7 +52,7 @@ C_CONTROLBYTES(MaxxChrome Setup, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
-        CONTROLBYTES_MAX(, 2000),
+        CONTROLBYTES_MAX(, 4096),
         ,
         PP_SETUP_CONFIG)
 
@@ -73,7 +73,7 @@ C_CONTROLBYTES(MaxxChrome Runtime, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
-        CONTROLBYTES_MAX(, 2000),
+        CONTROLBYTES_MAX(, 4096),
         ,
         PP_RUNTIME_PARAMS)
 
