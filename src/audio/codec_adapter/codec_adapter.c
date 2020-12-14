@@ -557,8 +557,11 @@ static int codec_adapter_set_params(struct comp_dev *dev, struct sof_ipc_ctrl_da
 		}
 	}
 done:
-	if (codec->runtime_params)
-		rfree(codec->runtime_params);
+	if (!cdata->elems_remaining) {
+		if (codec->runtime_params)
+			rfree(codec->runtime_params);
+		codec->runtime_params = NULL;
+	}
 	codec->runtime_params = NULL;
 	return ret;
 end:
