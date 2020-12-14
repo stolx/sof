@@ -562,7 +562,6 @@ done:
 			rfree(codec->runtime_params);
 		codec->runtime_params = NULL;
 	}
-	codec->runtime_params = NULL;
 	return ret;
 end:
 	return ret;
