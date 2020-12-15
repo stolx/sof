@@ -542,7 +542,6 @@ static int codec_adapter_set_params(struct comp_dev *dev, struct sof_ipc_ctrl_da
 				if (ret) {
 					comp_err(dev, "codec_adapter_set_params() error %x: codec runtime config apply failed",
 						 ret);
-					goto done;
 				}  else {
 					comp_dbg(dev, "codec_adapter_set_params() apply of runtime config done.");
 				}
@@ -555,13 +554,13 @@ static int codec_adapter_set_params(struct comp_dev *dev, struct sof_ipc_ctrl_da
 			comp_err(dev, "codec_adapter_set_params(): error: unknown config type.");
 			break;
 		}
-	}
+	} else
+		goto end;
+
 done:
-	if (!cdata->elems_remaining) {
-		if (codec->runtime_params)
-			rfree(codec->runtime_params);
-		codec->runtime_params = NULL;
-	}
+	if (codec->runtime_params)
+		rfree(codec->runtime_params);
+	codec->runtime_params = NULL;
 	return ret;
 end:
 	return ret;

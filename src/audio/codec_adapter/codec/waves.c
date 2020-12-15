@@ -8,6 +8,8 @@
 #include "sof/audio/codec_adapter/codec/waves.h"
 #include "Dummy/Dummy_Effect.h"
 
+#define MAX_CONFIG_SIZE_BYTES (4096) // this is SOF limitation
+
 static int32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
 {
 	// converts MaxxBuffer_Format_t to number of bytes it requires
@@ -86,7 +88,7 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 	uint32_t i;
 
 	for (i = 0; i < len; i++)
-		comp_err(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
+		comp_dbg(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
 }
 
 static void waves_codec_data_clear(struct waves_codec_data *waves_codec)
@@ -313,17 +315,22 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 	uint32_t index;
 	uint32_t param_number = 0;
 
-	comp_err(dev, "waves_codec_configure() start");
+	comp_err(dev, "waves_codec_configure() start. type %d", type);
 
 	cfg = (type == CODEC_CFG_SETUP) ? &codec->s_cfg : &codec->r_cfg;
-
-	comp_err(dev, "waves_codec_configure() type %d, size %d", type, cfg->size);
 
 	if (!cfg->avail || !cfg->size) {
 		comp_err(dev, "waves_codec_configure() error: no config for type %d, avail %d, size %d",
 			type, (unsigned int)cfg->avail, (unsigned int)cfg->size);
 		return -EIO;
 	}
+
+	if (cfg->size > MAX_CONFIG_SIZE_BYTES) {
+		comp_err(dev, "waves_codec_configure() size is too big %d", cfg->size);
+		return -EIO;
+	}
+
+	comp_err(dev, "waves_codec_configure() total config size %d", cfg->size);
 
 	// incoming data in cfg->data is arranged according to struct codec_param
 	// there migh be more than one struct codec_param inside cfg->data, glued back to back
@@ -337,6 +344,12 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 
 		comp_err(dev, "waves_codec_configure() PARAM %02d T %02d L %04d V",
 			param_number, param->id, param->size);
+
+		if (param->size > MAX_CONFIG_SIZE_BYTES) {
+			comp_err(dev, "waves_codec_configure() error: codec param size too big %d:",
+				param->size);
+			return -EIO;
+		}
 
 		trace_array(dev, (const uint32_t *)param->data, param_data_size / sizeof(uint32_t));
 
@@ -379,6 +392,7 @@ static int waves_effect_setup_config(struct comp_dev *dev)
 		codec->s_cfg.avail = true;
 	}
 
+	// setup config is ignored
 	ret = 0;//waves_effect_config(dev, CODEC_CFG_SETUP);
 	codec->s_cfg.avail = false;
 
@@ -502,21 +516,6 @@ int waves_codec_process(struct comp_dev *dev)
 	waves_codec->o_stream.numProcessedSamples = 0;
 	waves_codec->o_stream.maxNumSamples = waves_codec->buffer_samples;
 
-// I am not a dummy any more
-//	{
-//		Dummy_Effect_t *de = (Dummy_Effect_t *)waves_codec->effect;
-//
-//		comp_err(dev, "waves_codec_process() dummy parse");
-//		if (de->coeffs.gain) {
-//			comp_err(dev, "waves_codec_process() bypass %d, GAIN NOT ZERO %d,",
-//				de->coeffs.bypass, de->coeffs.gain);
-//		}
-//		else {
-//			comp_err(dev, "waves_codec_process() bypass %d, GAIN IS ZERO %d,",
-//				de->coeffs.bypass, de->coeffs.gain);
-//		}
-//
-//	}
 	status = MaxxEffect_Process(waves_codec->effect, i_streams, o_streams);
 	if (status) {
 		ret = status;
