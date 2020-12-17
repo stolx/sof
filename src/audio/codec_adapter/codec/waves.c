@@ -558,7 +558,7 @@ int waves_codec_process(struct comp_dev *dev)
 	return 0;
 
 err:
-	comp_err(dev, "waves_codec_process() failed %d" ret);
+	comp_err(dev, "waves_codec_process() failed %d", ret);
 	return ret;
 }
 
@@ -575,7 +575,7 @@ int waves_codec_apply_config(struct comp_dev *dev)
 	return 0;
 
 err:
-	comp_err(dev, "waves_codec_apply_config() failed %d" ret);
+	comp_err(dev, "waves_codec_apply_config() failed %d", ret);
 	return ret;
 }
 
@@ -599,7 +599,7 @@ int waves_codec_reset(struct comp_dev *dev)
 	return ret;
 
 err:
-	comp_err(dev, "waves_codec_reset() failed %d" ret);
+	comp_err(dev, "waves_codec_reset() failed %d", ret);
 	return ret;
 }
 
