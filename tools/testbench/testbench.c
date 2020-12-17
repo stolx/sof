@@ -33,7 +33,7 @@ DECLARE_SOF_TB_UUID("tdfb", tdfb_uuid,  0xdd511749, 0xd9fa, 0x455c,
 DECLARE_SOF_TB_UUID("drc", drc_uuid, 0xb36ee4da, 0x006f, 0x47f9,
 		    0xa0, 0x6d, 0xfe, 0xcb, 0xe2, 0xd8, 0xb6, 0xce);
 
-DECLARE_SOF_TB_UUID("maxxeffect", me_uuid, 0xd8218443, 0x5ff3, 0x4a4c,
+DECLARE_SOF_TB_UUID("codec_adapter", ca_uuid, 0xd8218443, 0x5ff3, 0x4a4c,
 		    0xb3, 0x88, 0x6c, 0xfe, 0x07, 0xb9, 0x56, 0xaa);
 
 #define TESTBENCH_NCH 2 /* Stereo */
@@ -50,7 +50,7 @@ struct shared_lib_table lib_table[NUM_WIDGETS_SUPPORTED] = {
 	{"crossover", "libsof_crossover.so", SOF_COMP_NONE, SOF_TB_UUID(crossover_uuid), 0, NULL},
 	{"tdfb", "libsof_tdfb.so", SOF_COMP_NONE, SOF_TB_UUID(tdfb_uuid), 0, NULL},
 	{"drc", "libsof_drc.so", SOF_COMP_NONE, SOF_TB_UUID(drc_uuid), 0, NULL},
-	{"maxxeffect", "libsof_maxxeffect.so", SOF_COMP_NONE, SOF_TB_UUID(me_uuid), 0, NULL},
+	{"codec_adapter", "libsof_codec_adapter.so", SOF_COMP_NONE, SOF_TB_UUID(ca_uuid), 0, NULL},
 };
 
 /* compatible variables, not used */

@@ -159,7 +159,12 @@ if(CONFIG_LIBRARY)
 		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Revision.c
 		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/RPC/Dummy_RPC_Server.c)
 
-	add_local_sources(sof codec_adapter/codec_adapter.c
+	add_library(sof_codec_adapter MODULE "")
+	target_link_libraries(sof_codec_adapter PRIVATE sof_options)
+	target_link_libraries(sof_codec_adapter PRIVATE -Wl,--export-dynamic)
+	target_compile_options(sof_codec_adapter PRIVATE)
+	set_property(TARGET sof_codec_adapter PROPERTY POSITION_INDEPENDENT_CODE ON)
+	add_local_sources(sof_codec_adapter codec_adapter/codec_adapter.c
 		codec_adapter/codec/waves.c
 		codec_adapter/codec/generic.c
 		${DUMMY_SOURCES})
@@ -167,6 +172,9 @@ if(CONFIG_LIBRARY)
 	# Waves interface needs relative path starting from parent directory of MaxxEffect folder
 	# Adding folder with Waves interface to includes
 	# to be fixed
-	target_include_directories(sof PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../include/sof/audio/waves)
+	target_include_directories(sof_codec_adapter PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../include/sof/audio/waves)
+	sof_append_relative_path_definitions(sof_codec_adapter)
+
+	install(TARGETS sof_codec_adapter DESTINATION lib)
 
 endif()
