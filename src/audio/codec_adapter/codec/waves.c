@@ -6,7 +6,6 @@
 //
 #include "sof/audio/codec_adapter/codec/generic.h"
 #include "sof/audio/codec_adapter/codec/waves.h"
-#include "Dummy/Dummy_Effect.h"
 
 #define MAX_CONFIG_SIZE_BYTES (4096) // this is SOF limitation
 
