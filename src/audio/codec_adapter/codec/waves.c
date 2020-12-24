@@ -335,11 +335,11 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 	uint32_t index;
 	uint32_t param_number = 0;
 
-	comp_dbg(dev, "waves_codec_configure() start type %d", type);
+	comp_info(dev, "waves_codec_configure() start type %d", type);
 
 	cfg = (type == CODEC_CFG_SETUP) ? &codec->s_cfg : &codec->r_cfg;
 
-	comp_dbg(dev, "waves_codec_configure() config %p, size %d, avail %d",
+	comp_info(dev, "waves_codec_configure() config %p, size %d, avail %d",
 		cfg->data, cfg->size, cfg->avail);
 
 	if (!cfg->avail || !cfg->size) {
@@ -363,7 +363,7 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 		param = (struct codec_param *)((char *)cfg->data + index);
 		param_data_size = param->size - sizeof(param->size) - sizeof(param->id);
 
-		comp_dbg(dev, "waves_codec_configure() PARAM %02d T %02d L %04d V",
+		comp_info(dev, "waves_codec_configure() PARAM %02d T %02d L %04d V",
 			param_number, param->id, param->size);
 
 		if (param->size > MAX_CONFIG_SIZE_BYTES) {
@@ -416,8 +416,7 @@ static int waves_effect_setup_config(struct comp_dev *dev)
 		codec->s_cfg.avail = true;
 	}
 
-	// setup config is ignored
-	ret = 0; //waves_effect_config(dev, CODEC_CFG_SETUP);
+	ret = waves_effect_config(dev, CODEC_CFG_SETUP);
 	codec->s_cfg.avail = false;
 
 	comp_dbg(dev, "waves_effect_setup_config() done");
