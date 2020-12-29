@@ -50,7 +50,7 @@ CONTROLBYTES_PRIV(PP_SETUP_CONFIG,
 )
 
 # Post process Bytes control for setup config
-C_CONTROLBYTES(MaxxChrome Setup, PIPELINE_ID,
+C_CONTROLBYTES(MaxxChrome Setup PIPELINE_ID, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
@@ -71,7 +71,7 @@ CONTROLBYTES_PRIV(PP_RUNTIME_PARAMS,
 )
 
 # Post process Bytes control for runtime config
-C_CONTROLBYTES(MaxxChrome Runtime, PIPELINE_ID,
+C_CONTROLBYTES(MaxxChrome Runtime PIPELINE_ID, PIPELINE_ID,
         CONTROLBYTES_OPS(bytes),
         CONTROLBYTES_EXTOPS(void, 258, 258),
         , , ,
@@ -92,7 +92,7 @@ W_PCM_PLAYBACK(PCM_ID, Passthrough Playback, DAI_PERIODS, 0, SCHEDULE_CORE)
 
 # Codec Adapter
 W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
-        LIST(`          ', "MaxxChrome Setup", "MaxxChrome Runtime"))
+        LIST(`          ', "MaxxChrome Setup PIPELINE_ID", "MaxxChrome Runtime PIPELINE_ID"))
 
 # Playback Buffers
 W_BUFFER(0, COMP_BUFFER_SIZE(DAI_PERIODS,
