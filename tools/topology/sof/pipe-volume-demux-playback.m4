@@ -21,6 +21,66 @@ include(`pga.m4')
 include(`muxdemux.m4')
 include(`mixercontrol.m4')
 include(`bytecontrol.m4')
+include(`dai.m4')
+include(`pipeline.m4')
+include(`codec_adapter.m4')
+
+ifdef(`PP_CORE',`', `define(`PP_CORE', 1)')
+
+CONTROLBYTES_PRIV(PP_SETUP_CONFIG,
+`       bytes "0x53,0x4f,0x46,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x30,0x00,0x00,0x00,'
+`       0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+
+`       0x00,0x01,0x41,0x57,'
+`       0x00,0x00,0x00,0x00,'
+`       0x80,0xBB,0x00,0x00,'
+`       0x20,0x00,0x00,0x00,'
+`       0x02,0x00,0x00,0x00,'
+
+`       0x01,0x00,0x00,0x00,'
+`       0x1c,0x00,0x00,0x00,'
+
+`       0x01,0x00,0x00,0x00,'
+`       0x0c,0x00,0x00,0x00,'
+`       0x03,0x00,0x00,0x00,'
+`       0x01,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00"'
+)
+
+# Post process Bytes control for setup config
+C_CONTROLBYTES(MaxxChrome Setup PIPELINE_ID, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(, 4096),
+        ,
+        PP_SETUP_CONFIG)
+
+CONTROLBYTES_PRIV(PP_RUNTIME_PARAMS,
+`       bytes "0x53,0x4f,0x46,0x00,'
+`       0x01,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00"'
+)
+
+# Post process Bytes control for runtime config
+C_CONTROLBYTES(MaxxChrome Runtime PIPELINE_ID, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(, 4096),
+        ,
+        PP_RUNTIME_PARAMS)
 
 # demux Bytes control with max value of 255
 C_CONTROLBYTES(concat(`DEMUX', PIPELINE_ID), PIPELINE_ID,
@@ -57,6 +117,9 @@ W_DATA(playback_pga_conf, playback_pga_tokens)
 # with 2 sink and 0 source periods
 W_PCM_PLAYBACK(PCM_ID, Low Latency Playback, 2, 0, SCHEDULE_CORE)
 
+W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
+        LIST(`          ', "MaxxChrome Setup PIPELINE_ID", "MaxxChrome Runtime PIPELINE_ID"))
+
 # "Master Playback Volume" has 2 source and x sink periods for DAI ping-pong
 W_PGA(1, PIPELINE_FORMAT, DAI_PERIODS, 2, playback_pga_conf, SCHEDULE_CORE,
 	LIST(`		', "PIPELINE_ID Master Playback Volume"))
@@ -66,6 +129,9 @@ W_MUXDEMUX(0, 1, PIPELINE_FORMAT, 2, 2, SCHEDULE_CORE,
 	LIST(`         ', concat(`DEMUX', PIPELINE_ID)))
 
 # Low Latency Buffers
+W_BUFFER(3, COMP_BUFFER_SIZE(DAI_PERIODS,
+    COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
+    PLATFORM_HOST_MEM_CAP)
 W_BUFFER(0, COMP_BUFFER_SIZE(2,
 	COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
 	PLATFORM_HOST_MEM_CAP)
@@ -83,7 +149,9 @@ W_BUFFER(2, COMP_BUFFER_SIZE(DAI_PERIODS,
 
 P_GRAPH(pipe-ll-playback-PIPELINE_ID, PIPELINE_ID,
 	LIST(`		',
-	`dapm(N_BUFFER(0), N_PCMP(PCM_ID))',
+	`dapm(N_BUFFER(3), N_PCMP(PCM_ID))',
+	`dapm(N_CODEC_ADAPTER(0), N_BUFFER(3))',
+	`dapm(N_BUFFER(0), N_CODEC_ADAPTER(0))',
 	`dapm(N_PGA(1), N_BUFFER(0))',
 	`dapm(N_BUFFER(1), N_PGA(1))',
 	`dapm(N_MUXDEMUX(0), N_BUFFER(1))',
