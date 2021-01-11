@@ -7,7 +7,7 @@
 #include "sof/audio/codec_adapter/codec/generic.h"
 #include "sof/audio/codec_adapter/codec/waves.h"
 
-#define MAX_CONFIG_SIZE_BYTES (4096) // this is SOF limitation
+#define MAX_CONFIG_SIZE_BYTES (8192) // this is SOF limitation
 
 static int32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
 {
