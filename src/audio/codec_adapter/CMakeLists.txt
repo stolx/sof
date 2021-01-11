@@ -6,6 +6,10 @@ if(CONFIG_CADENCE_CODEC)
 add_local_sources(sof codec/cadence.c)
 endif()
 
+if(CONFIG_DUMMY_CODEC)
+add_local_sources(sof codec/dummy.c)
+endif()
+
 if(CONFIG_WAVES_CODEC)
 set(DUMMY_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/codec/Dummy/Dummy.c

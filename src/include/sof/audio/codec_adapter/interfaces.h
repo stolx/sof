@@ -15,12 +15,17 @@
 #include <sof/audio/codec_adapter/codec/cadence.h>
 #endif /* CONFIG_CADENCE_CODEC */
 
+#if CONFIG_DUMMY_CODEC
+#include <sof/audio/codec_adapter/codec/dummy.h>
+#endif
+
 #if CONFIG_WAVES_CODEC
 #include <sof/audio/codec_adapter/codec/waves.h>
-#endif /* CONFIG_WAVES_CODEC */
+#endif
 
-#define INTERFACE_ID_CADENCE        0xCADE01
-#define INTERFACE_ID_WAVES          0x574101
+#define CADENCE_ID 0xCADE01
+#define DUMMY_ID   0xD03311
+#define WAVES_ID   0x574101
 
 /*****************************************************************************/
 /* Linked codecs interfaces						     */
@@ -28,7 +33,7 @@
 static struct codec_interface interfaces[] = {
 #if CONFIG_CADENCE_CODEC
 	{
-		.id = INTERFACE_ID_CADENCE, /**< Cadence interface */
+		.id = CADENCE_ID, /**< Cadence interface */
 		.init  = cadence_codec_init,
 		.prepare = cadence_codec_prepare,
 		.process = cadence_codec_process,
@@ -37,9 +42,22 @@ static struct codec_interface interfaces[] = {
 		.free = cadence_codec_free
 	},
 #endif /* CONFIG_CADENCE_CODEC */
+
+#ifdef CONFIG_DUMMY_CODEC
+	{
+		.id = DUMMY_ID, /** dummy interface */
+		.init  = dummy_codec_init,
+		.prepare = dummy_codec_prepare,
+		.process = dummy_codec_process,
+		.apply_config = dummy_codec_apply_config,
+		.reset = dummy_codec_reset,
+		.free = dummy_codec_free
+	},
+#endif /* CONFIG_DUMMY_CODEC */
+
 #if CONFIG_WAVES_CODEC
 	{
-		.id = INTERFACE_ID_WAVES,
+		.id = WAVES_ID,
 		.init  = waves_codec_init,
 		.prepare = waves_codec_prepare,
 		.process = waves_codec_process,

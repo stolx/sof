@@ -233,40 +233,40 @@ done
 
 
 # for processing algorithms
-#ALG_SINGLE_MODE_TESTS=(asrc eq-fir eq-iir src dcblock tdfb)
-#ALG_SINGLE_SIMPLE_TESTS=(test-capture test-playback)
-#ALG_MULTI_MODE_TESTS=(crossover)
-#ALG_MULTI_SIMPLE_TESTS=(test-playback)
-#ALG_MULTI_PIPE_AMOUNT=(2 3 4)
-#ALG_PROTOCOL_TESTS=(I2S)
-#ALG_SSP_TESTS=(5)
-#ALG_MCLK_IDS=(0)
-#
-#for protocol in ${ALG_PROTOCOL_TESTS[@]}
-#do
-#	for ssp in ${ALG_SSP_TESTS[@]}
-#	do
-#		for mclk_id in ${ALG_MCLK_IDS[@]}
-#		do
-#			for mode in ${ALG_SINGLE_MODE_TESTS[@]}
-#			do
-#				simple_test codec $mode "SSP${ssp}-Codec" s16le SSP $ssp s16le 16 16 1536000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
-#				simple_test codec $mode "SSP${ssp}-Codec" s24le SSP $ssp s24le 32 24 3072000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
-#				simple_test codec $mode "SSP${ssp}-Codec" s32le SSP $ssp s32le 32 32 3072000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
-#			done
-#
-#			for mode in ${ALG_MULTI_MODE_TESTS[@]}
-#			do
-#				for pipe_num in ${ALG_MULTI_PIPE_AMOUNT[@]}
-#				do
-#					simple_test codec $mode "SSP${ssp}-Codec" s16le SSP $ssp s16le 16 16 1536000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
-#					simple_test codec $mode "SSP${ssp}-Codec" s24le SSP $ssp s24le 32 24 3072000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
-#					simple_test codec $mode "SSP${ssp}-Codec" s32le SSP $ssp s32le 32 32 3072000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
-#				done
-#			done
-#		done
-#	done
-#done
+ALG_SINGLE_MODE_TESTS=(asrc eq-fir eq-iir src dcblock tdfb drc multiband-drc)
+ALG_SINGLE_SIMPLE_TESTS=(test-capture test-playback)
+ALG_MULTI_MODE_TESTS=(crossover)
+ALG_MULTI_SIMPLE_TESTS=(test-playback)
+ALG_MULTI_PIPE_AMOUNT=(2 3 4)
+ALG_PROTOCOL_TESTS=(I2S)
+ALG_SSP_TESTS=(5)
+ALG_MCLK_IDS=(0)
+
+for protocol in ${ALG_PROTOCOL_TESTS[@]}
+do
+	for ssp in ${ALG_SSP_TESTS[@]}
+	do
+		for mclk_id in ${ALG_MCLK_IDS[@]}
+		do
+			for mode in ${ALG_SINGLE_MODE_TESTS[@]}
+			do
+				simple_test codec $mode "SSP${ssp}-Codec" s16le SSP $ssp s16le 16 16 1536000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
+				simple_test codec $mode "SSP${ssp}-Codec" s24le SSP $ssp s24le 32 24 3072000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
+				simple_test codec $mode "SSP${ssp}-Codec" s32le SSP $ssp s32le 32 32 3072000 24576000 $protocol $mclk_id 1 ALG_SINGLE_SIMPLE_TESTS[@]
+			done
+
+			for mode in ${ALG_MULTI_MODE_TESTS[@]}
+			do
+				for pipe_num in ${ALG_MULTI_PIPE_AMOUNT[@]}
+				do
+					simple_test codec $mode "SSP${ssp}-Codec" s16le SSP $ssp s16le 16 16 1536000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
+					simple_test codec $mode "SSP${ssp}-Codec" s24le SSP $ssp s24le 32 24 3072000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
+					simple_test codec $mode "SSP${ssp}-Codec" s32le SSP $ssp s32le 32 32 3072000 24576000 $protocol $mclk_id $pipe_num ALG_MULTI_SIMPLE_TESTS[@]
+				done
+			done
+		done
+	done
+done
 
 # for CNL
 #simple_test nocodec passthrough "NoCodec-0" s16le SSP 0 s16le 25 16 2400000 24000000 I2S 0 1 SIMPLE_TESTS[@]
