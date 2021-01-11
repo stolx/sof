@@ -121,7 +121,7 @@ W_DATA(DEF_PGA_CONF, DEF_PGA_TOKENS)
 W_PCM_PLAYBACK(PCM_ID, Low Latency Playback, 2, 0, SCHEDULE_CORE)
 
 W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
-        LIST(`          ', "MaxxChrome Setup PIPELINE_ID", "MaxxChrome Runtime PIPELINE_ID"))
+        LIST(`          ', "MaxxChrome Runtime PIPELINE_ID", "MaxxChrome Setup PIPELINE_ID"))
 
 # "Master Playback Volume" has 2 source and x sink periods for DAI ping-pong
 W_PGA(1, PIPELINE_FORMAT, DAI_PERIODS, 2, DEF_PGA_CONF, SCHEDULE_CORE,

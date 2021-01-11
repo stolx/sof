@@ -92,7 +92,7 @@ W_PCM_PLAYBACK(PCM_ID, Passthrough Playback, DAI_PERIODS, 0, SCHEDULE_CORE)
 
 # Codec Adapter
 W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
-        LIST(`          ', "MaxxChrome Setup PIPELINE_ID", "MaxxChrome Runtime PIPELINE_ID"))
+        LIST(`          ', "MaxxChrome Runtime PIPELINE_ID", "MaxxChrome Setup PIPELINE_ID"))
 
 # Playback Buffers
 W_BUFFER(0, COMP_BUFFER_SIZE(DAI_PERIODS,
