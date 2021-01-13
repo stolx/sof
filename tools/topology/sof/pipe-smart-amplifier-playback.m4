@@ -22,6 +22,11 @@ include(`pga.m4')
 include(`smart_amp.m4')
 include(`mixercontrol.m4')
 include(`bytecontrol.m4')
+include(`dai.m4')
+include(`pipeline.m4')
+include(`codec_adapter.m4')
+
+ifdef(`PP_CORE',`', `define(`PP_CORE', 1)')
 
 ifdef(`SMART_TX_CHANNELS',`',`errprint(note: Need to define DAI TX channel number for sof-smart-amplifier
 )')
@@ -40,6 +45,61 @@ ifelse(SMART_FB_CHANNELS, `8',
 `define(`FB_CHMAP',`0xff,0xff,0x00,0x01,0xff,0xff,0xff,0xff')',
 `define(`FB_CHMAP',`0x00,0x01,0x02,0x03,0xff,0xff,0xff,0xff')'
 )
+
+CONTROLBYTES_PRIV(PP_SETUP_CONFIG,
+`       bytes "0x53,0x4f,0x46,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x30,0x00,0x00,0x00,'
+`       0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+
+`       0x00,0x01,0x41,0x57,'
+`       0x00,0x00,0x00,0x00,'
+`       0x80,0xBB,0x00,0x00,'
+`       0x20,0x00,0x00,0x00,'
+`       0x02,0x00,0x00,0x00,'
+
+`       0x01,0x00,0x00,0x00,'
+`       0x1c,0x00,0x00,0x00,'
+
+`       0x01,0x00,0x00,0x00,'
+`       0x0c,0x00,0x00,0x00,'
+`       0x03,0x00,0x00,0x00,'
+`       0x01,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00"'
+)
+
+# Post process Bytes control for setup config
+C_CONTROLBYTES(MaxxChrome Setup PIPELINE_ID, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(, 8192),
+        ,
+        PP_SETUP_CONFIG)
+
+CONTROLBYTES_PRIV(PP_RUNTIME_PARAMS,
+`       bytes "0x53,0x4f,0x46,0x00,'
+`       0x01,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x10,0x00,0x03,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00,'
+`       0x00,0x00,0x00,0x00"'
+)
+
+# Post process Bytes control for runtime config
+C_CONTROLBYTES(MaxxChrome Runtime PIPELINE_ID, PIPELINE_ID,
+        CONTROLBYTES_OPS(bytes),
+        CONTROLBYTES_EXTOPS(void, 258, 258),
+        , , ,
+        CONTROLBYTES_MAX(, 8192),
+        ,
+        PP_RUNTIME_PARAMS)
 
 CONTROLBYTES_PRIV(SMART_AMP_priv,
 `		bytes "0x53,0x4f,0x46,0x00,0x00,0x00,0x00,0x00,'
@@ -94,11 +154,17 @@ C_CONTROLBYTES_VOLATILE_READONLY(Smart_amp Model_Get_params, PIPELINE_ID,
 # with 2 sink and 0 source periods
 W_PCM_PLAYBACK(PCM_ID, Smart Amplifier Playback, 2, 0)
 
+W_CODEC_ADAPTER(0, PIPELINE_FORMAT, DAI_PERIODS, DAI_PERIODS, PP_CORE,
+        LIST(`          ', "MaxxChrome Runtime PIPELINE_ID", "MaxxChrome Setup PIPELINE_ID"))
+
 # Mux 0 has 2 sink and source periods.
 W_SMART_AMP(0, SMART_UUID, PIPELINE_FORMAT, 2, 2, LIST(`             ', "Smart_amp Config", "Smart_amp Model",
 	    ifelse(SOF_ABI_VERSION_3_17_OR_GRT, `1', "Smart_amp Model_Get_params")))
 
 # Low Latency Buffers
+W_BUFFER(3, COMP_BUFFER_SIZE(DAI_PERIODS,
+    COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
+    PLATFORM_HOST_MEM_CAP)
 W_BUFFER(0, COMP_BUFFER_SIZE(2,
 	COMP_SAMPLE_SIZE(PIPELINE_FORMAT), PIPELINE_CHANNELS, COMP_PERIOD_FRAMES(PCM_MAX_RATE, SCHEDULE_PERIOD)),
 	PLATFORM_HOST_MEM_CAP)
@@ -120,7 +186,9 @@ define(`N_SMART_REF_BUF',`BUF'PIPELINE_ID`.'2)
 
 P_GRAPH(pipe-smart-amp-playback-PIPELINE_ID, PIPELINE_ID,
 	LIST(`		',
-	`dapm(N_BUFFER(0), N_PCMP(PCM_ID))',
+	`dapm(N_BUFFER(3), N_PCMP(PCM_ID))',
+	`dapm(N_CODEC_ADAPTER(0), N_BUFFER(3))',
+	`dapm(N_BUFFER(0), N_CODEC_ADAPTER(0))',
 	`dapm(N_SMART_AMP(0), N_BUFFER(0))',
 	`dapm(N_SMART_AMP(0), N_BUFFER(2))',
 	`dapm(N_BUFFER(1), N_SMART_AMP(0))'))

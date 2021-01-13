@@ -65,7 +65,7 @@ define(`SMART_PCM_NAME', `smart373-spk')
 # UUID related
 DECLARE_SOF_RT_UUID("Maxim DSM", maxim_dsm_comp_uuid, 0x0cd84e80, 0xebd3,
                     0x11ea, 0xad, 0xc1, 0x02, 0x42, 0xac, 0x12, 0x00, 0x02);
-define(`SMART_UUID', maxim_dsm_comp_uuid)
+#define(`SMART_UUID', maxim_dsm_comp_uuid)
 # Include Smart Amplifier support
 include(`sof-smart-amplifier.m4')
 
@@ -94,7 +94,7 @@ dnl     frames, deadline, priority, core)
 
 # Low Latency playback pipeline 2 on PCM 1 using max 2 channels of s32le.
 # Schedule 48 frames per 1000us deadline on core 0 with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
+PIPELINE_PCM_ADD(sof/pipe-maxxeffect-maxxchrome-playback.m4,
         2, 1, 2, s32le,
 	1000, 0, 0,
 	48000, 48000, 48000)
