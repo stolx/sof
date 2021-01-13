@@ -257,9 +257,6 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EIO;
 	}
 
-	// todo log binary revision
-	comp_info(dev, "waves_effect_revision() %s", revision);
-
 	comp_dbg(dev, "waves_effect_revision() done");
 	return 0;
 }
@@ -274,7 +271,7 @@ static int waves_effect_allocate(struct comp_dev *dev)
 	comp_dbg(dev, "waves_effect_allocate() start");
 
 	// memmory for response
-	// SOF does not support getting infor from codec adapter right now
+	// SOF does not support get requests from codec adapter right now
 	// response will be stored in internal buffer to be dumped into logs
 	status = MaxxEffect_GetMessageMaxSize(waves_codec->effect,
 		&waves_codec->request_max_bytes, &waves_codec->response_max_bytes);
@@ -311,11 +308,6 @@ static int waves_effect_allocate(struct comp_dev *dev)
 		waves_codec->response_max_bytes,
 		waves_codec->buffer_bytes,
 		waves_codec->buffer_bytes);
-
-	comp_info(dev, "waves_effect_allocate() addr response %p, i_buffer %p, o_buffer %p",
-		waves_codec->response,
-		waves_codec->i_buffer,
-		waves_codec->o_buffer);
 
 	codec->cpd.in_buff = waves_codec->i_buffer;
 	codec->cpd.in_buff_size = waves_codec->buffer_bytes;
@@ -363,7 +355,7 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 		param = (struct codec_param *)((char *)cfg->data + index);
 		param_data_size = param->size - sizeof(param->size) - sizeof(param->id);
 
-		comp_info(dev, "waves_codec_configure() PARAM %02d T %02d L %04d V",
+		comp_info(dev, "waves_codec_configure() param num %d id %d size %d",
 			param_number, param->id, param->size);
 
 		if (param->size > MAX_CONFIG_SIZE_BYTES) {
@@ -372,7 +364,11 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 			return -EIO;
 		}
 
-		trace_array(dev, (const uint32_t *)param->data, param_data_size / sizeof(uint32_t));
+		if (param->id != 1) {
+			comp_err(dev, "waves_codec_configure() codec param id %d not supported",
+				param->id);
+			return -EIO;
+		}
 
 		status = MaxxEffect_Message(waves_codec->effect, param->data, param_data_size,
 			waves_codec->response, &response_size);
