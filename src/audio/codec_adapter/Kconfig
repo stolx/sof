@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+menu "Codec Adapter codecs"
+	visible if COMP_CODEC_ADAPTER
+
+	config CADENCE_CODEC
+		bool "Cadence codec"
+		default n
+		help
+		  Select for codecs which conforms to the Cadence API.
+		  This will cause codec adapter component to include header
+		  files specific to CADENCE base codecs.
+
+	config DUMMY_CODEC
+		bool "Dummy codec"
+		default n
+		help
+		  Select for a dummy API codec implementation.
+		  This will cause codec adapter component to include header
+		  files specific to DUMMY base codecs.
+
+	config WAVES_CODEC
+	bool "Waves codec"
+	default n
+	help
+		Select to include Waves codec. Waves codec implements MaxxEffect API.
+		API definition together with pre-compiled library is shared by Waves Audio Ltd.
+		If library is not provided will result in compilation error.
+endmenu
