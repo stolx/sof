@@ -245,17 +245,40 @@ static int waves_effect_init(struct comp_dev *dev)
 	return 0;
 }
 
+#define R32(n) (\
+	(((n) & 0x000000FF) << 24)| \
+	(((n) & 0x0000FF00) << 8) | \
+	(((n) & 0x00FF0000) >> 8) | \
+	(((n) & 0xFF000000) >> 24))
+
+#define DUMP_REVISION_ITERATION(p, l) do {\
+	if (l >= 4) {\
+		comp_info(dev, "%08x%08x%08x%08x", R32(p[0]), R32(p[1]), R32(p[2]), R32(p[3]));\
+		l -= 4; p += 4;\
+	} else if (l == 3) {\
+		comp_info(dev, "%08x%08x%08x", R32(p[0]), R32(p[1]), R32(p[2]));\
+		l -= 3; p += 3;\
+	} else if (l == 2) {\
+		comp_info(dev, "%08x%08x", R32(p[0]), R32(p[1]));\
+		l -= 2; p += 2;\
+	} else if (l == 1) {\
+		comp_info(dev, "%08x", R32(p[0]));\
+		l--; p++;\
+	} \
+} while (0)
+
 static int waves_effect_revision(struct comp_dev *dev)
 {
 	// dump MaxxEffect revision into trace
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 	const char *revision = NULL;
+	uint32_t revision_len;
 	MaxxStatus_t status;
 
 	comp_info(dev, "waves_effect_revision() start");
 
-	status = MaxxEffect_Revision_Get(waves_codec->effect, &revision, NULL);
+	status = MaxxEffect_Revision_Get(waves_codec->effect, &revision, &revision_len);
 
 	if (status) {
 		comp_err(dev, "waves_effect_revision() MaxxEffect_Revision_Get() error %d",
@@ -263,7 +286,26 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EIO;
 	}
 
-	comp_info(dev, "waves_effect_revision() %s", revision);
+	if (revision_len) {
+		const uint32_t *r32 = (uint32_t *)revision;
+		uint32_t l32 = revision_len / 4;
+
+		// get requests from codec_adapter are not supported
+		// printing strings is not supported
+		// so dumping revision string to trace log as ascii values
+
+		// if simply write a for loop here then depending on trace filtering settings
+		// some parts of revision might not be printed
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+	}
 
 	comp_info(dev, "waves_effect_revision() done");
 	return 0;
