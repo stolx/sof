@@ -393,7 +393,7 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 		comp_info(dev, "waves_codec_configure() param num %d id %d size %d",
 			param_number, param->id, param->size);
 
-		switch param->id) {
+		switch (param->id) {
 		case PARAM_NOP:
 			comp_info(dev, "waves_codec_configure() NOP");
 			ret = 0;
