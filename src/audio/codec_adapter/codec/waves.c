@@ -9,6 +9,12 @@
 
 #define MAX_CONFIG_SIZE_BYTES (8192) // this is SOF limitation
 
+enum waves_codec_params {
+	PARAM_NOP = 0,
+	PARAM_MESSAGE = 1,
+	PARAM_REVISION = 2
+};
+
 static int32_t sample_convert_format_to_bytes(MaxxBuffer_Format_t fmt)
 {
 	// converts MaxxBuffer_Format_t to number of bytes it requires
@@ -247,7 +253,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 	const char *revision = NULL;
 	MaxxStatus_t status;
 
-	comp_dbg(dev, "waves_effect_revision() start");
+	comp_info(dev, "waves_effect_revision() start");
 
 	status = MaxxEffect_Revision_Get(waves_codec->effect, &revision, NULL);
 
@@ -257,7 +263,9 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EIO;
 	}
 
-	comp_dbg(dev, "waves_effect_revision() done");
+	comp_info(dev, "waves_effect_revision() %s", revision);
+
+	comp_info(dev, "waves_effect_revision() done");
 	return 0;
 }
 
@@ -318,14 +326,43 @@ static int waves_effect_allocate(struct comp_dev *dev)
 	return 0;
 }
 
+static int waves_effect_message(struct comp_dev *dev, void *data, uint32_t size)
+{
+	struct codec_data *codec = comp_get_codec(dev);
+	struct waves_codec_data *waves_codec = codec->private;
+	MaxxStatus_t status;
+	uint32_t response_size = 0;
+
+	comp_info(dev, "waves_effect_message() start data %p size %d", data, size);
+
+	status = MaxxEffect_Message(waves_codec->effect, data, size,
+		waves_codec->response, &response_size);
+
+	if (status) {
+		comp_err(dev, "waves_effect_message() MaxxEffect_Message() error %d",
+			status);
+		return -EIO;
+	}
+
+	// at time of writing codec adapter does not support getting something from codec
+	// so response is stored to internal structure and dumped into trace messages
+	if (response_size) {
+		comp_dbg(dev, "waves_effect_message() trace response");
+		trace_array(dev, (const uint32_t *)waves_codec->response,
+			response_size / sizeof(uint32_t));
+	}
+
+	return 0;
+}
+
 static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 {
 	struct codec_config *cfg;
 	struct codec_data *codec = comp_get_codec(dev);
-	struct waves_codec_data *waves_codec = codec->private;
 	struct codec_param *param;
 	uint32_t index;
 	uint32_t param_number = 0;
+	int ret = 0;
 
 	comp_info(dev, "waves_codec_configure() start type %d", type);
 
@@ -347,10 +384,8 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 
 	// incoming data in cfg->data is arranged according to struct codec_param
 	// there migh be more than one struct codec_param inside cfg->data, glued back to back
-	for (index = 0; index < cfg->size; param_number++) {
-		uint32_t response_size = 0;
+	for (index = 0; index < cfg->size && (!ret); param_number++) {
 		uint32_t param_data_size;
-		MaxxStatus_t status;
 
 		param = (struct codec_param *)((char *)cfg->data + index);
 		param_data_size = param->size - sizeof(param->size) - sizeof(param->id);
@@ -358,40 +393,30 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 		comp_info(dev, "waves_codec_configure() param num %d id %d size %d",
 			param_number, param->id, param->size);
 
-		if (param->size > MAX_CONFIG_SIZE_BYTES) {
-			comp_err(dev, "waves_codec_configure() codec param size too big %d",
-				param->size);
-			return -EIO;
-		}
-
-		if (param->id != 1) {
-			comp_err(dev, "waves_codec_configure() codec param id %d not supported",
-				param->id);
-			return -EIO;
-		}
-
-		status = MaxxEffect_Message(waves_codec->effect, param->data, param_data_size,
-			waves_codec->response, &response_size);
-
-		if (status) {
-			comp_err(dev, "waves_codec_configure() MaxxEffect_Message() error %d",
-				status);
-			return -EIO;
-		}
-
-		// at time of writing codec adapter does not support getting something from codec
-		// so response is stored to internal structure and dumped into trace messages
-		if (response_size) {
-			comp_dbg(dev, "waves_codec_configure() trace response");
-			trace_array(dev, (const uint32_t *)waves_codec->response,
-				response_size / sizeof(uint32_t));
+		switch param->id) {
+		case PARAM_NOP:
+			comp_info(dev, "waves_codec_configure() NOP");
+			ret = 0;
+			break;
+		case PARAM_MESSAGE:
+			ret = waves_effect_message(dev, param->data, param_data_size);
+			break;
+		case PARAM_REVISION:
+			ret = waves_effect_revision(dev);
+			break;
+		default:
+			ret = -EIO;
+			break;
 		}
 
 		index += param->size;
 	}
 
-	comp_dbg(dev, "waves_codec_configure() done");
-	return 0;
+	if (ret)
+		comp_err(dev, "waves_codec_configure() error %d", ret);
+	else
+		comp_dbg(dev, "waves_codec_configure() done");
+	return ret;
 }
 
 static int waves_effect_setup_config(struct comp_dev *dev)
@@ -480,10 +505,6 @@ int waves_codec_prepare(struct comp_dev *dev)
 		goto err;
 
 	ret = waves_effect_init(dev);
-	if (ret)
-		goto err;
-
-	ret = waves_effect_revision(dev);
 	if (ret)
 		goto err;
 
