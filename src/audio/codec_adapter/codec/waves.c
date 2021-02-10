@@ -263,7 +263,7 @@ static int waves_effect_init(struct comp_dev *dev)
 	waves_codec->o_format = waves_codec->i_format;
 
 	waves_codec->sample_size_in_bytes = sample_bytes;
-	waves_codec->buffer_samples = src_fmt->rate * 2 / 1000; // 2 ms io buffers
+	waves_codec->buffer_samples = src_fmt->rate * 2 / 1000; /* 2 ms io buffers */
 	waves_codec->buffer_bytes = waves_codec->buffer_samples * src_fmt->channels *
 		waves_codec->sample_size_in_bytes;
 
