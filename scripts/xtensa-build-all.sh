@@ -40,7 +40,7 @@ usage: $0 [options] platform(s)
        -u Force UP ARCH
        -d Enable debug build
        -c Interactive menuconfig
-       -o copies the file argument from src/arch/xtensa/configs/override/$arg.config
+       -o arg, copies src/arch/xtensa/configs/override/<arg>.config
 	  to the build directory after invoking CMake and before Make.
        -k Configure rimage to use a non-default \${RIMAGE_PRIVATE_KEY}
            DEPRECATED: use the more flexible \${PRIVATE_KEY_OPTION} below.
@@ -347,6 +347,7 @@ do
 	mkdir "$BUILD_DIR"
 	cd "$BUILD_DIR"
 
+	printf 'PATH=%s\n' "$PATH"
 	( set -x # log the main commands and their parameters
 	cmake -DTOOLCHAIN="$TOOLCHAIN" \
 		-DROOT_DIR="$ROOT" \
@@ -355,7 +356,7 @@ do
 		"${PRIVATE_KEY_OPTION}" \
 		..
 
-	make ${PLATFORM}${DEFCONFIG_PATCH}_defconfig
+	cmake --build .  --  ${PLATFORM}${DEFCONFIG_PATCH}_defconfig
 	)
 
 	if [ -n "$OVERRIDE_CONFIG" ]
@@ -365,7 +366,7 @@ do
 
 	if [[ "x$MAKE_MENUCONFIG" == "xyes" ]]
 	then
-		make menuconfig
+		cmake --build .  --  menuconfig
 	fi
 
 	if [[ "x$BUILD_DEBUG" == "xyes" ]]
@@ -387,10 +388,10 @@ do
 
 	if [ -e override.config ]
 	then
-		make overrideconfig
+		cmake --build .  --  overrideconfig
 	fi
 
-	make bin -j "${BUILD_JOBS}" ${BUILD_VERBOSE}
+	cmake --build .  --  bin -j "${BUILD_JOBS}" ${BUILD_VERBOSE}
 
 	cd "$WORKDIR"
 done # for platform in ...

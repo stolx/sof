@@ -98,6 +98,8 @@
 
 /* DSP Shim Registers */
 #define SHIM_DSPWC		0x20 /* DSP Wall Clock */
+#define SHIM_DSPWCL		0x20 /* DSP Wall Clock Low */
+#define SHIM_DSPWCH		0x24 /* DSP Wall Clock High */
 #define SHIM_DSPWCTCS		0x28 /* DSP Wall Clock Timer Control & Status */
 #define SHIM_DSPWCT0C		0x30 /* DSP Wall Clock Timer 0 Compare */
 #define SHIM_DSPWCT1C		0x38 /* DSP Wall Clock Timer 1 Compare */
@@ -112,6 +114,9 @@
 
 /** \brief Request HP RING Oscillator Clock */
 #define SHIM_CLKCTL_RHROSCC	BIT(31)
+
+/** \brief Request WOVCRO Clock */
+#define SHIM_CLKCTL_WOV_CRO_REQUEST	BIT(4)
 
 /** \brief Request XTAL Oscillator Clock */
 #define SHIM_CLKCTL_RXOSCC	BIT(30)
@@ -130,6 +135,7 @@
 /** \brief Oscillator Clock Select*/
 #define SHIM_CLKCTL_OCS_HP_RING		BIT(2)
 #define SHIM_CLKCTL_OCS_LP_RING		0
+#define SHIM_CLKCTL_WOVCROSC		BIT(3)
 
 /** \brief LP Memory Clock Select */
 #define SHIM_CLKCTL_LMCS_DIV2	0
@@ -171,6 +177,9 @@
 
 /** \brief HP RING Oscillator Clock Status */
 #define SHIM_CLKSTS_HROSCCS	BIT(31)
+
+/** \brief WOVCRO Clock Status */
+#define SHIM_CLKSTS_WOV_CRO	BIT(4)
 
 /** \brief XTAL Oscillator Clock Status */
 #define SHIM_CLKSTS_XOSCCS	BIT(30)

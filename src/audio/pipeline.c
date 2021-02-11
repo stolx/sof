@@ -517,7 +517,10 @@ int pipeline_params(struct pipeline *p, struct comp_dev *host,
 		    struct sof_ipc_pcm_params *params)
 {
 	struct sof_ipc_pcm_params hw_params;
-	struct pipeline_data data;
+	struct pipeline_data data = {
+		.start = host,
+		.params = &hw_params,
+	};
 	struct pipeline_walk_context hw_param_ctx = {
 		.comp_func = pipeline_comp_hw_params,
 		.comp_data = &data,
@@ -541,13 +544,9 @@ int pipeline_params(struct pipeline *p, struct comp_dev *host,
 		  params->params.sample_valid_bytes,
 		  params->params.sample_container_bytes);
 
-	/* settin hw params */
-	data.start = host;
-	data.params = &hw_params;
-
 	ret = hw_param_ctx.comp_func(host, NULL, &hw_param_ctx, dir);
 	if (ret < 0) {
-		pipe_err(p, "pipeline_prepare(): ret = %d, dev->comp.id = %u",
+		pipe_err(p, "pipeline_params(): ret = %d, dev->comp.id = %u",
 			 ret, dev_comp_id(host));
 		return ret;
 	}
@@ -602,7 +601,7 @@ static int pipeline_comp_task_init(struct pipeline *p)
 
 		p->pipe_task = pipeline_task_init(p, type, pipeline_task);
 		if (!p->pipe_task) {
-			pipe_err(p, "pipeline_prepare(): task init failed");
+			pipe_err(p, "pipeline_comp_task_init(): task init failed");
 			return -ENOMEM;
 		}
 	}
@@ -689,8 +688,9 @@ static void pipeline_comp_trigger_sched_comp(struct pipeline *p,
 	/* only required by the scheduling component or sink component
 	 * on pipeline without one
 	 */
-	if (p->sched_comp != comp &&
-	    (p == p->sched_comp->pipeline || p->sink_comp != comp))
+	if (dev_comp_id(p->sched_comp) != dev_comp_id(comp) &&
+	    (pipeline_id(p) == pipeline_id(p->sched_comp->pipeline) ||
+	     dev_comp_id(p->sink_comp) != dev_comp_id(comp)))
 		return;
 
 	/* add for later schedule */

@@ -4,6 +4,12 @@
 
 include(`platform/intel/dmic.m4')
 
+# define default PCM names
+ifdef(`DMIC_48K_PCM_NAME',`',
+`define(DMIC_48k_PCM_NAME, `DMIC')')
+ifdef(`DMIC_16K_PCM_NAME',`',
+`define(DMIC_16k_PCM_NAME, `DMIC16kHz')')
+
 # defined in machine driver
 ifdef(`DMIC_DAI_LINK_48k_ID',`',
 `define(DMIC_DAI_LINK_48k_ID, `6')')
@@ -56,8 +62,8 @@ dnl     time_domain, sched_comp)
 # Passthrough capture pipeline using max channels defined by DMIC_PCM_CHANNELS.
 
 # Set 1000us deadline on core 0 with priority 0
-ifdef(`DMICPROC_FILTER1', `define(PIPELINE_FILTER1, DMICPROC_FILTER1)')
-ifdef(`DMICPROC_FILTER2', `define(PIPELINE_FILTER2, DMICPROC_FILTER2)')
+ifdef(`DMICPROC_FILTER1', `define(PIPELINE_FILTER1, DMICPROC_FILTER1)', `undefine(`PIPELINE_FILTER1')')
+ifdef(`DMICPROC_FILTER2', `define(PIPELINE_FILTER2, DMICPROC_FILTER2)', `undefine(`PIPELINE_FILTER2')')
 
 PIPELINE_PCM_ADD(sof/pipe-DMICPROC-capture.m4,
 	DMIC_PIPELINE_48k_ID, DMIC_DAI_LINK_48k_ID, DMIC_PCM_CHANNELS, s32le,
@@ -69,8 +75,8 @@ undefine(`PIPELINE_FILTER2')
 # Passthrough capture pipeline using max channels defined by CHANNELS.
 
 # Schedule with 1000us deadline on core 0 with priority 0
-ifdef(`DMIC16KPROC_FILTER1', `define(PIPELINE_FILTER1, DMIC16KPROC_FILTER1)')
-ifdef(`DMIC16KPROC_FILTER2', `define(PIPELINE_FILTER2, DMIC16KPROC_FILTER2)')
+ifdef(`DMIC16KPROC_FILTER1', `define(PIPELINE_FILTER1, DMIC16KPROC_FILTER1)', `undefine(`PIPELINE_FILTER1')')
+ifdef(`DMIC16KPROC_FILTER2', `define(PIPELINE_FILTER2, DMIC16KPROC_FILTER2)', `undefine(`PIPELINE_FILTER2')')
 
 PIPELINE_PCM_ADD(sof/pipe-DMIC16KPROC-capture-16khz.m4,
 	DMIC_PIPELINE_16k_ID, DMIC_DAI_LINK_16k_ID, DMIC16K_PCM_CHANNELS, s32le,
@@ -104,8 +110,8 @@ DAI_ADD(sof/pipe-dai-capture.m4,
 
 dnl PCM_DUPLEX_ADD(name, pcm_id, playback, capture)
 dnl PCM_CAPTURE_ADD(name, pipeline, capture)
-PCM_CAPTURE_ADD(DMIC, DMIC_DAI_LINK_48k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_48k_ID))
-PCM_CAPTURE_ADD(DMIC16kHz, DMIC_DAI_LINK_16k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_16k_ID))
+PCM_CAPTURE_ADD(DMIC_48k_PCM_NAME, DMIC_DAI_LINK_48k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_48k_ID))
+PCM_CAPTURE_ADD(DMIC_16k_PCM_NAME, DMIC_DAI_LINK_16k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_16k_ID))
 
 #
 # BE configurations - overrides config in ACPI if present
