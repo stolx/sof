@@ -417,9 +417,9 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 	((n & 0x00FF0000) >> 8) |\
 	((n & 0xFF000000) >> 24); })
 
-#define DUMP_REVISION_ITERATION do {\
-	typeof(r32) p = r32;\
-	typeof(l32) l = l32;\
+#define DUMP_REVISION_ITERATION(ptr, len) do {\
+	typeof(ptr) p = ptr;\
+	typeof(len) l = len;\
 	if (l >= 4) {\
 		comp_info(dev, "%08x%08x%08x%08x", REV(p[0]), REV(p[1]), REV(p[2]), REV(p[3]));\
 		l -= 4; p += 4;\
@@ -433,7 +433,7 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 		comp_info(dev, "%08x", REV(p[0]));\
 		l--; p++;\
 	} \
-	r32 = p; l32 = l;\
+	ptr = p; len = l;\
 } while (0)
 
 static int waves_effect_revision(struct comp_dev *dev)
@@ -465,15 +465,15 @@ static int waves_effect_revision(struct comp_dev *dev)
 		 * if simply write a for loop here then depending on trace filtering settings
 		 * some parts of revision might not be printed - this is highly unwanted
 		 */
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
-		DUMP_REVISION_ITERATION;
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
+		DUMP_REVISION_ITERATION(r32, l32);
 	}
 
 	comp_info(dev, "waves_effect_revision() done");
