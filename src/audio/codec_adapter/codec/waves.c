@@ -55,7 +55,7 @@ static int8_t sample_format_convert_to_bytes(MaxxBuffer_Format_t fmt)
 
 	switch (fmt) {
 	case MAXX_BUFFER_FORMAT_Q1_15:
-		res = sizeof(uint8_t);
+		res = sizeof(uint16_t);
 		break;
 	case MAXX_BUFFER_FORMAT_Q1_23:
 		res = 3; /* 3 bytes */
