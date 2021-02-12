@@ -455,6 +455,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EINVAL;
 	}
 
+	// @TODO: debug revision implementation
 	if (revision_len) {
 		const uint32_t *r32 = (uint32_t *)revision;
 		uint32_t l32 = revision_len / 4;
@@ -519,7 +520,7 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 	struct codec_param *param;
 	uint32_t index;
 	uint32_t param_number = 0;
-	int ret;
+	int ret = 0;
 
 	comp_info(dev, "waves_codec_configure() start type %d", type);
 
