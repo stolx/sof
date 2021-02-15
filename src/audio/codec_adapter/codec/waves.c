@@ -217,47 +217,47 @@ static int waves_effect_check(struct comp_dev *dev)
 	if (src_fmt->rate != snk_fmt->rate) {
 		comp_err(dev, "waves_effect_check() sorce %d sink %d rate mismatch",
 			 src_fmt->rate, snk_fmt->rate);
-		return -EIO;
+		return -EINVAL;
 	}
 
 	/* upmix/downmix not supported */
 	if (src_fmt->channels != snk_fmt->channels) {
 		comp_err(dev, "waves_effect_check() sorce %d sink %d channels mismatch",
 			 src_fmt->channels, snk_fmt->channels);
-		return -EIO;
+		return -EINVAL;
 	}
 
 	/* different frame format not supported */
 	if (src_fmt->frame_fmt != snk_fmt->frame_fmt) {
 		comp_err(dev, "waves_effect_check() sorce %d sink %d sample format mismatch",
 			 src_fmt->frame_fmt, snk_fmt->frame_fmt);
-		return -EIO;
+		return -EINVAL;
 	}
 
 	/* different interleaving is not supported */
 	if (component->ca_source->buffer_fmt != component->ca_sink->buffer_fmt) {
 		comp_err(dev, "waves_effect_check() source %d sink %d buffer format mismatch");
-		return -EIO;
+		return -EINVAL;
 	}
 
 	if (!format_is_supported(src_fmt->frame_fmt)) {
 		comp_err(dev, "waves_effect_check() float samples not supported");
-		return -EIO;
+		return -EINVAL;
 	}
 
 	if (!layout_is_supported(component->ca_source->buffer_fmt)) {
 		comp_err(dev, "waves_effect_check() non interleaved not supported");
-		return -EIO;
+		return -EINVAL;
 	}
 
 	if (!rate_is_supported(src_fmt->rate)) {
 		comp_err(dev, "waves_effect_check() rate %d not supported", src_fmt->rate);
-		return -EIO;
+		return -EINVAL;
 	}
 
 	if (src_fmt->channels != 2) {
 		comp_err(dev, "waves_effect_check() channels %d not supported", src_fmt->channels);
-		return -EIO;
+		return -EINVAL;
 	}
 
 	comp_dbg(dev, "waves_effect_check() done");
@@ -408,7 +408,6 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 	for (i = 0; i < len; i++)
 		comp_dbg(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
 }
-#endif
 
 #define REV(N) (\
 	{typeof(N) n = (N);\
@@ -435,6 +434,7 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 	} \
 	ptr = p; len = l;\
 } while (0)
+#endif
 
 static int waves_effect_revision(struct comp_dev *dev)
 {
@@ -455,7 +455,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EINVAL;
 	}
 
-	// @TODO: debug revision implementation
+#if CONFIG_TRACE
 	if (revision_len) {
 		const uint32_t *r32 = (uint32_t *)revision;
 		uint32_t l32 = revision_len / 4;
@@ -476,6 +476,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 		DUMP_REVISION_ITERATION(r32, l32);
 		DUMP_REVISION_ITERATION(r32, l32);
 	}
+#endif
 
 	comp_info(dev, "waves_effect_revision() done");
 	return 0;
@@ -496,7 +497,7 @@ static int waves_effect_message(struct comp_dev *dev, void *data, uint32_t size)
 	if (status) {
 		comp_err(dev, "waves_effect_message() MaxxEffect_Message() error %d",
 			 status);
-		return -EIO;
+		return -EINVAL;
 	}
 
 #if CONFIG_TRACE
@@ -532,12 +533,12 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 	if (!cfg->avail || !cfg->size) {
 		comp_err(dev, "waves_codec_configure() no config for type %d, avail %d, size %d",
 			 type, cfg->avail, cfg->size);
-		return -ENOENT;
+		return -EINVAL;
 	}
 
 	if (cfg->size > MAX_CONFIG_SIZE_BYTES) {
 		comp_err(dev, "waves_codec_configure() size is too big %d", cfg->size);
-		return -E2BIG;
+		return -EINVAL;
 	}
 
 	/* incoming data in cfg->data is arranged according to struct codec_param
@@ -588,7 +589,7 @@ static int waves_effect_setup_config(struct comp_dev *dev)
 
 	if (!codec->s_cfg.avail && !codec->s_cfg.size) {
 		comp_err(dev, "waves_effect_startup_config() no setup config");
-		return -ENOENT;
+		return -EINVAL;
 	}
 
 	if (!codec->s_cfg.avail) {
