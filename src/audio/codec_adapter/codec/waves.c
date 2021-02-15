@@ -45,10 +45,10 @@ enum waves_codec_params {
 	PARAM_REVISION = 2
 };
 
-static int8_t sample_format_convert_to_bytes(MaxxBuffer_Format_t format)
+static int32_t sample_format_convert_to_bytes(MaxxBuffer_Format_t format)
 {
 	/* converts MaxxBuffer_Format_t to number of bytes it requires */
-	int8_t res;
+	int32_t res;
 
 	switch (format) {
 	case MAXX_BUFFER_FORMAT_Q1_15:
