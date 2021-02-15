@@ -108,11 +108,12 @@ define(DMIC_PCM_16k_ID, `12')
 define(DMIC_PIPELINE_16k_ID, `12')
 define(DMIC_PIPELINE_KWD_ID, `13')
 define(DMIC_DAI_LINK_16k_ID, `5')
+define(DMIC_16k_PCM_NAME, `BufferedMic')
 # define pcm, pipeline and dai id
 define(KWD_PIPE_SCH_DEADLINE_US, 5000)
 # include the generic dmic with kwd
 include(`platform/intel/intel-generic-dmic-kwd.m4')
-define(DMIC_16k_PCM_NAME, `BufferedMic')
+
 
 # Low Latency playback pipeline 6 on PCM 5 using max 2 channels of s32le.
 # Schedule 48 frames per 1000us deadline on core 0 with priority 0
@@ -197,8 +198,8 @@ DAI_ADD(sof/pipe-dai-playback.m4,
 # Bind PCM with the pipeline
 #
 dnl PCM_PLAYBACK_ADD(name, pcm_id, playback)
-PCM_PLAYBACK_ADD(Jack, 0, PIPELINE_PCM_1)
-PCM_CAPTURE_ADD(Jack, 1, PIPELINE_PCM_2)
+PCM_PLAYBACK_ADD(Jack Out, 0, PIPELINE_PCM_1)
+PCM_CAPTURE_ADD(Jack In, 1, PIPELINE_PCM_2)
 PCM_PLAYBACK_ADD(HDMI 1, 5, PIPELINE_PCM_6)
 PCM_PLAYBACK_ADD(HDMI 2, 6, PIPELINE_PCM_7)
 PCM_PLAYBACK_ADD(HDMI 3, 7, PIPELINE_PCM_8)

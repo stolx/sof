@@ -5,16 +5,27 @@
 include(`platform/intel/dmic.m4')
 
 # define default PCM names
-ifdef(`DMIC_48K_PCM_NAME',`',
+ifdef(`DMIC_48k_PCM_NAME',`',
 `define(DMIC_48k_PCM_NAME, `DMIC')')
-ifdef(`DMIC_16K_PCM_NAME',`',
+ifdef(`DMIC_16k_PCM_NAME',`',
 `define(DMIC_16k_PCM_NAME, `DMIC16kHz')')
 
-# defined in machine driver
-ifdef(`DMIC_DAI_LINK_48k_ID',`',
-`define(DMIC_DAI_LINK_48k_ID, `6')')
-ifdef(`DMIC_DAI_LINK_16k_ID',`',
-`define(DMIC_DAI_LINK_16k_ID, `7')')
+# variable that need to be defined in upper m4
+ifdef(`CHANNELS',`',`fatal_error(note: Need to define channel number for intel-generic-dmic
+)')
+ifdef(`DMIC_PCM_48k_ID',`',`fatal_error(note: Need to define dmic48k pcm id for intel-generic-dmic
+)')
+ifdef(`DMIC_PIPELINE_48k_ID',`',`fatal_error(note: Need to define dmic48k pipeline id for intel-generic-dmic
+)')
+ifdef(`DMIC_DAI_LINK_48k_ID',`',`fatal_error(note: Need to define dmic48k dai id for intel-generic-dmic
+)')
+
+ifdef(`DMIC_PCM_16k_ID',`',`fatal_error(note: Need to define dmic16k pcm id for intel-generic-dmic
+)')
+ifdef(`DMIC_PIPELINE_16k_ID',`',`fatal_error(note: Need to define dmic16k pipeline id for intel-generic-dmic
+)')
+ifdef(`DMIC_DAI_LINK_16k_ID',`',`fatal_error(note: Need to define dmic16k dai id for intel-generic-dmic
+)')
 
 # define(DMIC_DAI_LINK_48k_NAME, `dmic01')
 ifdef(`DMIC_DAI_LINK_48k_NAME',`',define(DMIC_DAI_LINK_48k_NAME, `dmic01'))
@@ -66,7 +77,7 @@ ifdef(`DMICPROC_FILTER1', `define(PIPELINE_FILTER1, DMICPROC_FILTER1)', `undefin
 ifdef(`DMICPROC_FILTER2', `define(PIPELINE_FILTER2, DMICPROC_FILTER2)', `undefine(`PIPELINE_FILTER2')')
 
 PIPELINE_PCM_ADD(sof/pipe-DMICPROC-capture.m4,
-	DMIC_PIPELINE_48k_ID, DMIC_DAI_LINK_48k_ID, DMIC_PCM_CHANNELS, s32le,
+	DMIC_PIPELINE_48k_ID, DMIC_PCM_48k_ID, DMIC_PCM_CHANNELS, s32le,
 	1000, 0, 0, 48000, 48000, 48000)
 
 undefine(`PIPELINE_FILTER1')
@@ -79,7 +90,7 @@ ifdef(`DMIC16KPROC_FILTER1', `define(PIPELINE_FILTER1, DMIC16KPROC_FILTER1)', `u
 ifdef(`DMIC16KPROC_FILTER2', `define(PIPELINE_FILTER2, DMIC16KPROC_FILTER2)', `undefine(`PIPELINE_FILTER2')')
 
 PIPELINE_PCM_ADD(sof/pipe-DMIC16KPROC-capture-16khz.m4,
-	DMIC_PIPELINE_16k_ID, DMIC_DAI_LINK_16k_ID, DMIC16K_PCM_CHANNELS, s32le,
+	DMIC_PIPELINE_16k_ID, DMIC_PCM_16k_ID, DMIC16K_PCM_CHANNELS, s32le,
 	1000, 0, 0, 16000, 16000, 16000)
 
 undefine(`PIPELINE_FILTER1')
@@ -110,8 +121,8 @@ DAI_ADD(sof/pipe-dai-capture.m4,
 
 dnl PCM_DUPLEX_ADD(name, pcm_id, playback, capture)
 dnl PCM_CAPTURE_ADD(name, pipeline, capture)
-PCM_CAPTURE_ADD(DMIC_48k_PCM_NAME, DMIC_DAI_LINK_48k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_48k_ID))
-PCM_CAPTURE_ADD(DMIC_16k_PCM_NAME, DMIC_DAI_LINK_16k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_16k_ID))
+PCM_CAPTURE_ADD(DMIC_48k_PCM_NAME, DMIC_PCM_48k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_48k_ID))
+PCM_CAPTURE_ADD(DMIC_16k_PCM_NAME, DMIC_PCM_16k_ID, concat(`PIPELINE_PCM_', DMIC_PIPELINE_16k_ID))
 
 #
 # BE configurations - overrides config in ACPI if present
