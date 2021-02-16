@@ -4,17 +4,17 @@
 //
 // Author: Oleksandr Strelchenko <oleksandr.strelchenko@waves.com>
 //
-#include "sof/audio/codec_adapter/codec/generic.h"
-#include "sof/audio/codec_adapter/codec/waves.h"
+#include <sof/audio/codec_adapter/codec/generic.h>
+#include <sof/audio/codec_adapter/codec/waves.h>
 
-#include "MaxxEffect/MaxxEffect.h"
-#include "MaxxEffect/MaxxStream.h"
-#include "MaxxEffect/MaxxStatus.h"
-#include "MaxxEffect/Initialize/MaxxEffect_Initialize.h"
-#include "MaxxEffect/Process/MaxxEffect_Process.h"
-#include "MaxxEffect/Process/MaxxEffect_Reset.h"
-#include "MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h"
-#include "MaxxEffect/Control/Direct/MaxxEffect_Revision.h"
+#include <MaxxEffect/MaxxEffect.h>
+#include <MaxxEffect/MaxxStream.h>
+#include <MaxxEffect/MaxxStatus.h>
+#include <MaxxEffect/Initialize/MaxxEffect_Initialize.h>
+#include <MaxxEffect/Process/MaxxEffect_Process.h>
+#include <MaxxEffect/Process/MaxxEffect_Reset.h>
+#include <MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h>
+#include <MaxxEffect/Control/Direct/MaxxEffect_Revision.h>
 
 #define MAX_CONFIG_SIZE_BYTES (8192)
 #define NUM_IO_STREAMS (1)
@@ -45,9 +45,9 @@ enum waves_codec_params {
 	PARAM_REVISION = 2
 };
 
+/* convert MaxxBuffer_Format_t to number of bytes it requires */
 static int32_t sample_format_convert_to_bytes(MaxxBuffer_Format_t format)
 {
-	/* converts MaxxBuffer_Format_t to number of bytes it requires */
 	int32_t res;
 
 	switch (format) {
@@ -72,9 +72,9 @@ static int32_t sample_format_convert_to_bytes(MaxxBuffer_Format_t format)
 	return res;
 }
 
+/* convert enum sof_ipc_frame to MaxxBuffer_Format_t */
 static MaxxBuffer_Format_t format_convert_sof_to_me(enum sof_ipc_frame format)
 {
-	/* converts enum sof_ipc_frame to MaxxBuffer_Format_t */
 	MaxxBuffer_Format_t res;
 
 	switch (format) {
@@ -97,9 +97,9 @@ static MaxxBuffer_Format_t format_convert_sof_to_me(enum sof_ipc_frame format)
 	return res;
 }
 
+/* convert sof frame format to MaxxBuffer_Layout_t */
 static MaxxBuffer_Layout_t layout_convert_sof_to_me(uint32_t layout)
 {
-	/* converts sof frame format to MaxxBuffer_Layout_t */
 	MaxxBuffer_Layout_t res;
 
 	switch (layout) {
@@ -116,9 +116,9 @@ static MaxxBuffer_Layout_t layout_convert_sof_to_me(uint32_t layout)
 	return res;
 }
 
+/* check if sample format supported by codec */
 static bool format_is_supported(enum sof_ipc_frame format)
 {
-	/* check if sample format supported by codec */
 	bool supported;
 
 	switch (format) {
@@ -135,9 +135,9 @@ static bool format_is_supported(enum sof_ipc_frame format)
 	return supported;
 }
 
+/* check if buffer layout supported by codec */
 static bool layout_is_supported(uint32_t layout)
 {
-	/* check if buffer layout supported by codec */
 	bool supported;
 
 	switch (layout) {
@@ -152,9 +152,9 @@ static bool layout_is_supported(uint32_t layout)
 	return supported;
 }
 
+/* check if sample rate supported by codec */
 static bool rate_is_supported(uint32_t rate)
 {
-	/* check if sample rate supported by codec */
 	bool supported;
 
 	switch (rate) {
@@ -169,9 +169,9 @@ static bool rate_is_supported(uint32_t rate)
 	return supported;
 }
 
+/* allocate memory for MaxxEffect object */
 static int waves_effect_allocate(struct comp_dev *dev)
 {
-	/* allocate memory for MaxxEffect object */
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 	MaxxStatus_t status;
@@ -201,12 +201,9 @@ static int waves_effect_allocate(struct comp_dev *dev)
 	return 0;
 }
 
+/* checks if sink/source parameters fit MaxxEffect */
 static int waves_effect_check(struct comp_dev *dev)
 {
-	/* checks if stream parameters fit MaxxEffect
-	 * returnes non-zero value in case something is not supported
-	 * can be extended to utilize MaxxEffect scenarios for future products
-	 */
 	struct comp_data *component = comp_get_drvdata(dev);
 	const struct audio_stream *src_fmt = &component->ca_source->stream;
 	const struct audio_stream *snk_fmt = &component->ca_sink->stream;
@@ -264,11 +261,9 @@ static int waves_effect_check(struct comp_dev *dev)
 	return 0;
 }
 
+/* initializes MaxxEffect based on stream parameters */
 static int waves_effect_init(struct comp_dev *dev)
 {
-	/* initializes MaxxEffect based on stream parameters
-	 * returnes non-zero value in case of error
-	 */
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 	struct comp_data *component = comp_get_drvdata(dev);
@@ -342,9 +337,9 @@ static int waves_effect_init(struct comp_dev *dev)
 	return 0;
 }
 
+/* allocate additional buffers for MaxxEffect */
 static int waves_effect_buffers(struct comp_dev *dev)
 {
-	/* allocate additional buffers for MaxxEffect */
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 	MaxxStatus_t status;
@@ -400,9 +395,9 @@ static int waves_effect_buffers(struct comp_dev *dev)
 }
 
 #if CONFIG_TRACE
+/* traces uint32_t array of len elements into debug messages */
 static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_t len)
 {
-	/* traces uint32_t array of len elements into debug messages */
 	uint32_t i;
 
 	for (i = 0; i < len; i++)
@@ -436,9 +431,9 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 } while (0)
 #endif
 
+/* get MaxxEffect revision */
 static int waves_effect_revision(struct comp_dev *dev)
 {
-	/* dump MaxxEffect revision into trace */
 	struct codec_data *codec = comp_get_codec(dev);
 	struct waves_codec_data *waves_codec = codec->private;
 	const char *revision = NULL;
@@ -482,6 +477,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 	return 0;
 }
 
+/* apply MaxxEffect message */
 static int waves_effect_message(struct comp_dev *dev, void *data, uint32_t size)
 {
 	struct codec_data *codec = comp_get_codec(dev);
@@ -514,6 +510,7 @@ static int waves_effect_message(struct comp_dev *dev, void *data, uint32_t size)
 	return 0;
 }
 
+/* apply codec config */
 static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 {
 	struct codec_config *cfg;
@@ -579,9 +576,9 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 	return ret;
 }
 
+/* apply setup config */
 static int waves_effect_setup_config(struct comp_dev *dev)
 {
-	/* apply setup config if present */
 	struct codec_data *codec = comp_get_codec(dev);
 	int ret;
 
@@ -614,10 +611,11 @@ int waves_codec_init(struct comp_dev *dev)
 
 	waves_codec = codec_allocate_memory(dev, sizeof(struct waves_codec_data), 16);
 	if (!waves_codec) {
-		comp_err(dev, "waves_codec_init() allocate memory for waves_codec_data");
+		comp_err(dev, "waves_codec_init() failed to allocate %d bytes for waves_codec_data",
+			 sizeof(struct waves_codec_data));
 		ret = -ENOMEM;
 	} else {
-		memset(waves_codec, 1, sizeof(struct waves_codec_data));
+		memset(waves_codec, 0, sizeof(struct waves_codec_data));
 		codec->private = waves_codec;
 
 		ret = waves_effect_allocate(dev);
