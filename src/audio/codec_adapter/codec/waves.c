@@ -7,14 +7,14 @@
 #include <sof/audio/codec_adapter/codec/generic.h>
 #include <sof/audio/codec_adapter/codec/waves.h>
 
-#include <MaxxEffect/MaxxEffect.h>
-#include <MaxxEffect/MaxxStream.h>
-#include <MaxxEffect/MaxxStatus.h>
-#include <MaxxEffect/Initialize/MaxxEffect_Initialize.h>
-#include <MaxxEffect/Process/MaxxEffect_Process.h>
-#include <MaxxEffect/Process/MaxxEffect_Reset.h>
-#include <MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h>
-#include <MaxxEffect/Control/Direct/MaxxEffect_Revision.h>
+#include "MaxxEffect/MaxxEffect.h"
+#include "MaxxEffect/MaxxStream.h"
+#include "MaxxEffect/MaxxStatus.h"
+#include "MaxxEffect/Initialize/MaxxEffect_Initialize.h"
+#include "MaxxEffect/Process/MaxxEffect_Process.h"
+#include "MaxxEffect/Process/MaxxEffect_Reset.h"
+#include "MaxxEffect/Control/RPC/MaxxEffect_RPC_Server.h"
+#include "MaxxEffect/Control/Direct/MaxxEffect_Revision.h"
 
 #define MAX_CONFIG_SIZE_BYTES (8192)
 #define NUM_IO_STREAMS (1)
@@ -212,21 +212,21 @@ static int waves_effect_check(struct comp_dev *dev)
 
 	/* resampling not supported */
 	if (src_fmt->rate != snk_fmt->rate) {
-		comp_err(dev, "waves_effect_check() sorce %d sink %d rate mismatch",
+		comp_err(dev, "waves_effect_check() source %d sink %d rate mismatch",
 			 src_fmt->rate, snk_fmt->rate);
 		return -EINVAL;
 	}
 
 	/* upmix/downmix not supported */
 	if (src_fmt->channels != snk_fmt->channels) {
-		comp_err(dev, "waves_effect_check() sorce %d sink %d channels mismatch",
+		comp_err(dev, "waves_effect_check() source %d sink %d channels mismatch",
 			 src_fmt->channels, snk_fmt->channels);
 		return -EINVAL;
 	}
 
 	/* different frame format not supported */
 	if (src_fmt->frame_fmt != snk_fmt->frame_fmt) {
-		comp_err(dev, "waves_effect_check() sorce %d sink %d sample format mismatch",
+		comp_err(dev, "waves_effect_check() source %d sink %d sample format mismatch",
 			 src_fmt->frame_fmt, snk_fmt->frame_fmt);
 		return -EINVAL;
 	}
@@ -404,31 +404,34 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 		comp_dbg(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
 }
 
-#define REV(N) (\
-	{typeof(N) n = (N);\
-	((n & 0x000000FF) << 24) |\
-	((n & 0x0000FF00) << 8) |\
-	((n & 0x00FF0000) >> 8) |\
+#define BYTESWAP(N) ({ \
+	typeof(N) n = (N); \
+	((n & 0x000000FF) << 24) | \
+	((n & 0x0000FF00) << 8) | \
+	((n & 0x00FF0000) >> 8) | \
 	((n & 0xFF000000) >> 24); })
 
-#define DUMP_REVISION_ITERATION(ptr, len) do {\
-	typeof(ptr) p = ptr;\
-	typeof(len) l = len;\
-	if (l >= 4) {\
-		comp_info(dev, "%08x%08x%08x%08x", REV(p[0]), REV(p[1]), REV(p[2]), REV(p[3]));\
-		l -= 4; p += 4;\
-	} else if (l == 3) {\
-		comp_info(dev, "%08x%08x%08x", REV(p[0]), REV(p[1]), REV(p[2]));\
-		l -= 3; p += 3;\
-	} else if (l == 2) {\
-		comp_info(dev, "%08x%08x", REV(p[0]), REV(p[1]));\
-		l -= 2; p += 2;\
-	} else if (l == 1) {\
-		comp_info(dev, "%08x", REV(p[0]));\
-		l--; p++;\
-	} \
-	ptr = p; len = l;\
-} while (0)
+#define DUMP_REVISION_ITERATION(ptr, len) \
+	do { \
+		typeof(ptr) p = ptr; \
+		typeof(len) l = len; \
+		if (l >= 4) { \
+			comp_info(dev, "%08x%08x%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1]), \
+				  BYTESWAP(p[2]), BYTESWAP(p[3])); \
+			l -= 4; p += 4; \
+		} else if (l == 3) { \
+			comp_info(dev, "%08x%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1]), \
+				  BYTESWAP(p[2])); \
+			l -= 3; p += 3; \
+		} else if (l == 2) { \
+			comp_info(dev, "%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1])); \
+			l -= 2; p += 2; \
+		} else if (l == 1) { \
+			comp_info(dev, "%08x", BYTESWAP(p[0])); \
+			l--; p++; \
+		} \
+		ptr = p; len = l; \
+	} while (0)
 #endif
 
 /* get MaxxEffect revision */
@@ -553,7 +556,6 @@ static int waves_effect_config(struct comp_dev *dev, enum codec_cfg_type type)
 		switch (param->id) {
 		case PARAM_NOP:
 			comp_info(dev, "waves_codec_configure() NOP");
-			ret = 0;
 			break;
 		case PARAM_MESSAGE:
 			ret = waves_effect_message(dev, param->data, param_data_size);
