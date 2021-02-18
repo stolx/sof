@@ -138,4 +138,41 @@
 #define dump_object_ptr(__o) do {} while (0)
 #endif
 
+#if CONFIG_TRACE
+/* swap an endiannes of 32-bit word */
+#define byte_swap(N) ({ \
+	typeof(N) n = (N); \
+	((n & 0x000000FF) << 24) | \
+	((n & 0x0000FF00) << 8) | \
+	((n & 0x00FF0000) >> 8) | \
+	((n & 0xFF000000) >> 24); })
+
+/* dump up to 4 32-bit words into trace */
+#define dump_hex(ptr, len) \
+	do { \
+		typeof(ptr) p = ptr; \
+		typeof(len) l = len; \
+		if (l >= 4) { \
+			comp_info(dev, "%08x%08x%08x%08x", byte_swap(p[0]), byte_swap(p[1]), \
+				  byte_swap(p[2]), byte_swap(p[3])); \
+			l -= 4; p += 4; \
+		} else if (l == 3) { \
+			comp_info(dev, "%08x%08x%08x", byte_swap(p[0]), byte_swap(p[1]), \
+				  byte_swap(p[2])); \
+			l -= 3; p += 3; \
+		} else if (l == 2) { \
+			comp_info(dev, "%08x%08x", byte_swap(p[0]), byte_swap(p[1])); \
+			l -= 2; p += 2; \
+		} else if (l == 1) { \
+			comp_info(dev, "%08x", byte_swap(p[0])); \
+			l--; p++; \
+		} \
+		ptr = p; len = l; \
+	} while (0)
+#else
+
+#define dump_hex() do {} while (0)
+
+#endif
+
 #endif /* __SOF_DEBUG_DEBUG_H__ */

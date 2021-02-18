@@ -6,6 +6,7 @@
 //
 #include <sof/audio/codec_adapter/codec/generic.h>
 #include <sof/audio/codec_adapter/codec/waves.h>
+#include <sof/debug/debug.h>
 
 #include "MaxxEffect/MaxxEffect.h"
 #include "MaxxEffect/MaxxStream.h"
@@ -403,35 +404,6 @@ static void trace_array(const struct comp_dev *dev, const uint32_t *arr, uint32_
 	for (i = 0; i < len; i++)
 		comp_dbg(dev, "trace_array() data[%03d]:0x%08x", i, *(arr + i));
 }
-
-#define BYTESWAP(N) ({ \
-	typeof(N) n = (N); \
-	((n & 0x000000FF) << 24) | \
-	((n & 0x0000FF00) << 8) | \
-	((n & 0x00FF0000) >> 8) | \
-	((n & 0xFF000000) >> 24); })
-
-#define DUMP_REVISION_ITERATION(ptr, len) \
-	do { \
-		typeof(ptr) p = ptr; \
-		typeof(len) l = len; \
-		if (l >= 4) { \
-			comp_info(dev, "%08x%08x%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1]), \
-				  BYTESWAP(p[2]), BYTESWAP(p[3])); \
-			l -= 4; p += 4; \
-		} else if (l == 3) { \
-			comp_info(dev, "%08x%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1]), \
-				  BYTESWAP(p[2])); \
-			l -= 3; p += 3; \
-		} else if (l == 2) { \
-			comp_info(dev, "%08x%08x", BYTESWAP(p[0]), BYTESWAP(p[1])); \
-			l -= 2; p += 2; \
-		} else if (l == 1) { \
-			comp_info(dev, "%08x", BYTESWAP(p[0])); \
-			l--; p++; \
-		} \
-		ptr = p; len = l; \
-	} while (0)
 #endif
 
 /* get MaxxEffect revision */
@@ -464,15 +436,15 @@ static int waves_effect_revision(struct comp_dev *dev)
 		 * if simply write a for loop here then depending on trace filtering settings
 		 * some parts of revision might not be printed - this is highly unwanted
 		 */
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
-		DUMP_REVISION_ITERATION(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
+		dump_hex(r32, l32);
 	}
 #endif
 
