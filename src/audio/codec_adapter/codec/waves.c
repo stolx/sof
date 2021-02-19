@@ -219,6 +219,8 @@ static int waves_effect_check(struct comp_dev *dev)
 
 	comp_dbg(dev, "waves_effect_check() start");
 
+	/* todo use fallback to comp_verify_params when ready */
+
 	/* resampling not supported */
 	if (src_fmt->rate != snk_fmt->rate) {
 		comp_err(dev, "waves_effect_check() source %d sink %d rate mismatch",
@@ -328,7 +330,7 @@ static int waves_effect_init(struct comp_dev *dev)
 		waves_codec->sample_size_in_bytes;
 
 	// trace allows printing only up-to 4 words at a time
-	// so logging all the information in two calls
+	// logging all the information in two calls
 	comp_info(dev, "waves_effect_init() rate %d, channels %d", waves_codec->i_format.sampleRate,
 		  waves_codec->i_format.numChannels);
 
@@ -436,7 +438,7 @@ static int waves_effect_revision(struct comp_dev *dev)
 		return -EINVAL;
 	}
 
-#if CONFIG_TRACE
+#if CONFIG_TRACEV
 	if (revision_len) {
 		const uint32_t *ptr = (uint32_t *)revision;
 		uint32_t len = revision_len / sizeof(uint32_t);
@@ -483,7 +485,7 @@ static int waves_effect_message(struct comp_dev *dev, void *data, uint32_t size)
 		return -EINVAL;
 	}
 
-#if CONFIG_TRACE
+#if CONFIG_TRACEV
 	/* at time of writing codec adapter does not support getting something from codec
 	 * so response is stored to internal structure and dumped into trace messages
 	 */
