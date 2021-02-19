@@ -147,27 +147,25 @@
 	((n & 0x00FF0000) >> 8) | \
 	((n & 0xFF000000) >> 24); })
 
-/* dump up to 4 32-bit words into trace */
-#define dump_hex(ptr, len) \
+/* dump up to 4 32-bit words into trace starting in ptr, idx is incremented inside */
+#define dump_hex(ptr, idx, len) \
 	do { \
-		typeof(ptr) p = ptr; \
-		typeof(len) l = len; \
-		if (l >= 4) { \
-			comp_info(dev, "%08x%08x%08x%08x", byte_swap(p[0]), byte_swap(p[1]), \
-				  byte_swap(p[2]), byte_swap(p[3])); \
-			l -= 4; p += 4; \
-		} else if (l == 3) { \
-			comp_info(dev, "%08x%08x%08x", byte_swap(p[0]), byte_swap(p[1]), \
-				  byte_swap(p[2])); \
-			l -= 3; p += 3; \
-		} else if (l == 2) { \
-			comp_info(dev, "%08x%08x", byte_swap(p[0]), byte_swap(p[1])); \
-			l -= 2; p += 2; \
-		} else if (l == 1) { \
-			comp_info(dev, "%08x", byte_swap(p[0])); \
-			l--; p++; \
+		typeof(idx) __i = (idx); \
+		typeof(ptr) __p = (ptr) + __i; \
+		typeof(idx) __l = (len) - __i; \
+		typeof(idx) __n = __l > 4 ? 4 : __l; \
+		if (__n == 4) { \
+			comp_info(dev, "%08x%08x%08x%08x", byte_swap(__p[0]), byte_swap(__p[1]), \
+				  byte_swap(__p[2]), byte_swap(__p[3])); \
+		} else if (__n == 3) { \
+			comp_info(dev, "%08x%08x%08x", byte_swap(__p[0]), byte_swap(__p[1]), \
+				  byte_swap(__p[2])); \
+		} else if (__n == 2) { \
+			comp_info(dev, "%08x%08x", byte_swap(__p[0]), byte_swap(__p[1])); \
+		} else if (__n == 1) { \
+			comp_info(dev, "%08x", byte_swap(__p[0])); \
 		} \
-		ptr = p; len = l; \
+		idx += __n; \
 	} while (0)
 #else
 
