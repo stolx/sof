@@ -12,6 +12,7 @@
 
 #include <ipc/stream.h>
 #include <stdint.h>
+#include <sof/compiler_attributes.h>
 
 /* Maximum and minimum values for 24 bit */
 #define INT24_MAXVALUE  8388607
@@ -170,6 +171,51 @@ static inline uint32_t get_frame_bytes(enum sof_ipc_frame fmt,
 				       uint32_t channels)
 {
 	return get_sample_bytes(fmt) * channels;
+}
+
+static inline uint32_t test_get_sample_bytes(enum sof_ipc_frame fmt)
+{
+	/* same as get_frame_bytes but implemented with switch-case
+	 * only reason is to demonstrate error that checkpatch spawns
+	 * when adding COMPILER_FALLTHROUGH from case to default
+	 */
+
+	uint32_t res;
+
+	switch (fmt) {
+	case SOF_IPC_FRAME_S16_LE:
+		res = 2;
+		break;
+	case SOF_IPC_FRAME_S24_4LE:
+		COMPILER_FALLTHROUGH
+	default:
+		res = 4;
+		break;
+	}
+	return res;
+}
+
+static inline uint32_t test_get_sample_bytes2(enum sof_ipc_frame fmt)
+{
+	/* same as get_frame_bytes but implemented with switch-case in weird way
+	 * only reason is to demonstrate error that checkpatch spawns
+	 * when adding COMPILER_FALLTHROUGH from case to default
+	 */
+
+	uint32_t res = 0;
+
+	switch (fmt) {
+	case SOF_IPC_FRAME_S16_LE:
+		res += 1;
+		break;
+	case SOF_IPC_FRAME_S24_4LE:
+		res += 2;
+		COMPILER_FALLTHROUGH
+	default:
+		res += 3;
+		break;
+	}
+	return res;
 }
 
 #endif /* __SOF_AUDIO_FORMAT_H__ */
