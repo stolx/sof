@@ -138,16 +138,19 @@
 #define dump_object_ptr(__o) do {} while (0)
 #endif
 
-#if CONFIG_TRACE
-/* swap an endiannes of 32-bit word */
-#define byte_swap(N) ({ \
+/* swap an endianness of 32-bit word */
+#define bswap32(N) ({ \
 	typeof(N) n = (N); \
 	((n & 0x000000FF) << 24) | \
 	((n & 0x0000FF00) << 8) | \
 	((n & 0x00FF0000) >> 8) | \
 	((n & 0xFF000000) >> 24); })
 
-/* dump up to 4 32-bit words into trace starting in ptr, idx is incremented inside */
+#if CONFIG_TRACE
+/* dump up to 4 32-bit words into trace starting in ptr, idx is incremented inside
+ * unconditionally swaps endianness of data
+ * todo: use cpu_to_endianness so trace data will be independent of platform
+ */
 #define dump_hex(ptr, idx, len) \
 	do { \
 		typeof(idx) __i = (idx); \
@@ -155,15 +158,15 @@
 		typeof(idx) __l = (len) - __i; \
 		typeof(idx) __n = __l > 4 ? 4 : __l; \
 		if (__n == 4) { \
-			comp_info(dev, "%08x%08x%08x%08x", byte_swap(__p[0]), byte_swap(__p[1]), \
-				  byte_swap(__p[2]), byte_swap(__p[3])); \
+			comp_info(dev, "%08x%08x%08x%08x", bswap32(__p[0]), bswap32(__p[1]), \
+				  bswap32(__p[2]), bswap32(__p[3])); \
 		} else if (__n == 3) { \
-			comp_info(dev, "%08x%08x%08x", byte_swap(__p[0]), byte_swap(__p[1]), \
-				  byte_swap(__p[2])); \
+			comp_info(dev, "%08x%08x%08x", bswap32(__p[0]), bswap32(__p[1]), \
+				  bswap32(__p[2])); \
 		} else if (__n == 2) { \
-			comp_info(dev, "%08x%08x", byte_swap(__p[0]), byte_swap(__p[1])); \
+			comp_info(dev, "%08x%08x", bswap32(__p[0]), bswap32(__p[1])); \
 		} else if (__n == 1) { \
-			comp_info(dev, "%08x", byte_swap(__p[0])); \
+			comp_info(dev, "%08x", bswap32(__p[0])); \
 		} \
 		idx += __n; \
 	} while (0)
