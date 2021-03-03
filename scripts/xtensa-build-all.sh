@@ -14,9 +14,7 @@ BUILD_JOBS=$(nproc --all)
 BUILD_VERBOSE=
 PLATFORMS=()
 
-PATH=$pwd/local/bin:$PATH
-
-pwd=$(pwd)
+SOF_TOP=$(cd "$(dirname "$0")/.." && pwd)
 
 die()
 {
@@ -136,7 +134,7 @@ then
 fi
 
 OLDPATH=$PATH
-WORKDIR="$pwd"
+CURDIR="$(pwd)"
 
 # build platforms
 for platform in "${PLATFORMS[@]}"
@@ -252,7 +250,7 @@ do
 			# default key for TGL
 			if [ -z "$PRIVATE_KEY_OPTION" ]
 			then
-				PRIVATE_KEY_OPTION="-D${SIGNING_TOOL}_PRIVATE_KEY=$pwd/keys/otc_private_key_3k.pem"
+	PRIVATE_KEY_OPTION="-D${SIGNING_TOOL}_PRIVATE_KEY=$SOF_TOP/keys/otc_private_key_3k.pem"
 			fi
 			;;
 		tgl-h)
@@ -265,7 +263,7 @@ do
 			# default key for TGL
 			if [ -z "$PRIVATE_KEY_OPTION" ]
 			then
-				PRIVATE_KEY_OPTION="-D${SIGNING_TOOL}_PRIVATE_KEY=$pwd/keys/otc_private_key_3k.pem"
+	PRIVATE_KEY_OPTION="-D${SIGNING_TOOL}_PRIVATE_KEY=$SOF_TOP/keys/otc_private_key_3k.pem"
 			fi
 			;;
 		jsl)
@@ -281,25 +279,25 @@ do
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
-			XTENSA_TOOLS_VERSION="RF-2016.4-linux"
+			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
 			;;
 		imx8x)
 			PLATFORM="imx8x"
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
-			XTENSA_TOOLS_VERSION="RF-2016.4-linux"
+			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
 			;;
 		imx8m)
 			PLATFORM="imx8m"
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_mscale_v0_0_2_prod"
 			HOST="xtensa-imx8m-elf"
-			XTENSA_TOOLS_VERSION="RF-2016.4-linux"
+			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
 			;;
 
 	esac
-	ROOT="$pwd/../xtensa-root/$HOST"
+	ROOT="$SOF_TOP/../xtensa-root/$HOST"
 
 	if [ -n "$XTENSA_TOOLS_ROOT" ]
 	then
@@ -330,7 +328,7 @@ do
 		COMPILER="xcc"
 	else
 		TOOLCHAIN=$HOST
-		PATH=$pwd/../$HOST/bin:$OLDPATH
+		PATH=$SOF_TOP/../$HOST/bin:$OLDPATH
 		COMPILER="gcc"
 
 		case "$platform" in
@@ -354,7 +352,7 @@ do
 		-DMEU_OPENSSL="${MEU_OPENSSL}" \
 		"${MEU_PATH_OPTION}" \
 		"${PRIVATE_KEY_OPTION}" \
-		..
+		"$SOF_TOP"
 
 	cmake --build .  --  ${PLATFORM}${DEFCONFIG_PATCH}_defconfig
 	)
@@ -393,7 +391,7 @@ do
 
 	cmake --build .  --  bin -j "${BUILD_JOBS}" ${BUILD_VERBOSE}
 
-	cd "$WORKDIR"
+	cd "$CURDIR"
 done # for platform in ...
 
 # list all the images
