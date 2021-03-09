@@ -55,6 +55,25 @@ following environment variable:
 or:
      PRIVATE_KEY_OPTION='-DRIMAGE_PRIVATE_KEY=path/to/key'  $0 ...
 
+This script supports XtensaTools but only when installed in a specific
+directory structure, example:
+
+myXtensa/
+└── install/
+    ├── builds/
+    │   ├── RD-2012.5-linux/
+    │   │   └── Intel_HiFiEP/
+    │   └── RG-2017.8-linux/
+    │       ├── LX4_langwell_audio_17_8/
+    │       └── X4H3I16w2D48w3a_2017_8/
+    └── tools/
+        ├── RD-2012.5-linux/
+        │   └── XtensaTools/
+        └── RG-2017.8-linux/
+            └── XtensaTools/
+
+$ XTENSA_TOOLS_ROOT=/path/to/myXtensa $0 ...
+
 Supported platforms ${SUPPORTED_PLATFORMS[*]}
 
 EOF
@@ -83,7 +102,7 @@ SIGNING_TOOL=RIMAGE
 
 if [ -n "${OVERRIDE_CONFIG}" ]
 then
-	OVERRIDE_CONFIG="src/arch/xtensa/configs/override/$OVERRIDE_CONFIG.config"
+	OVERRIDE_CONFIG="${SOF_TOP}/src/arch/xtensa/configs/override/$OVERRIDE_CONFIG.config"
 	[ -f "${OVERRIDE_CONFIG}" ] || die 'Invalid override config file %s\n' "${OVERRIDE_CONFIG}"
 fi
 
@@ -279,25 +298,24 @@ do
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
-			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
+			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		imx8x)
 			PLATFORM="imx8x"
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
-			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
+			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		imx8m)
 			PLATFORM="imx8m"
 			ARCH="xtensa"
 			XTENSA_CORE="hifi4_mscale_v0_0_2_prod"
 			HOST="xtensa-imx8m-elf"
-			XTENSA_TOOLS_VERSION="RF-2017.8-linux"
+			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 
 	esac
-	ROOT="$SOF_TOP/../xtensa-root/$HOST"
 
 	if [ -n "$XTENSA_TOOLS_ROOT" ]
 	then
@@ -314,11 +332,15 @@ do
 				XCC="none"
 				XTOBJCOPY="none"
 				XTOBJDUMP="none"
-				echo "XTENSA_TOOLS_DIR is not a directory"
+				>&2 printf 'WARNING: %s
+\t is not a directory, reverting to gcc\n' "$XTENSA_TOOLS_DIR"
 		fi
 	fi
 
-	# update ROOT directory for xt-xcc
+	# CMake uses ROOT_DIR for includes and libraries a bit like
+	# --sysroot would.
+	ROOT="$SOF_TOP/../xtensa-root/$HOST"
+
 	if [ "$XCC" == "xt-xcc" ]
 	then
 		TOOLCHAIN=xt
@@ -352,14 +374,13 @@ do
 		-DMEU_OPENSSL="${MEU_OPENSSL}" \
 		"${MEU_PATH_OPTION}" \
 		"${PRIVATE_KEY_OPTION}" \
+		-DINIT_CONFIG=${PLATFORM}${DEFCONFIG_PATCH}_defconfig \
 		"$SOF_TOP"
-
-	cmake --build .  --  ${PLATFORM}${DEFCONFIG_PATCH}_defconfig
 	)
 
 	if [ -n "$OVERRIDE_CONFIG" ]
 	then
-		cp "../$OVERRIDE_CONFIG" override.config
+		cp "$OVERRIDE_CONFIG" override.config
 	fi
 
 	if [[ "x$MAKE_MENUCONFIG" == "xyes" ]]

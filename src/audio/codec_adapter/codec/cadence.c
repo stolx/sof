@@ -18,10 +18,48 @@
 /* Cadence API functions array						     */
 /*****************************************************************************/
 static struct cadence_api cadence_api_table[] = {
+#ifdef CONFIG_CADENCE_CODEC_WRAPPER
 	{
 		.id = 0x01,
 		.api = cadence_api_function
 	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_AAC_DEC
+	{
+		.id = 0x02,
+		.api = xa_aac_dec,
+	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_BSAC_DEC
+	{
+		.id = 0x03,
+		.api = xa_bsac_dec,
+	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_DAB_DEC
+	{
+		.id = 0x04,
+		.api = xa_dabplus_dec,
+	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_DRM_DEC
+	{
+		.id = 0x05,
+		.api = xa_drm_dec,
+	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_MP3_DEC
+	{
+		.id = 0x06,
+		.api = xa_mp3_dec,
+	},
+#endif
+#ifdef CONFIG_CADENCE_CODEC_SBC_DEC
+	{
+		.id = 0x07,
+		.api = xa_sbc_dec,
+	},
+#endif
 };
 
 int cadence_codec_init(struct comp_dev *dev)
@@ -50,7 +88,7 @@ int cadence_codec_init(struct comp_dev *dev)
 	/* Find and assign API function */
 	for (i = 0; i < no_of_api; i++) {
 		if (cadence_api_table[i].id == api_id) {
-			cd->api = cadence_api_table[0].api;
+			cd->api = cadence_api_table[i].api;
 			break;
 		}
 	}
