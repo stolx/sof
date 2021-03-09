@@ -1,6 +1,4 @@
 #!/bin/bash
-# SPDX-License-Identifier: BSD-3-Clause
-# Copyright(c) 2020 Intel Corporation. All rights reserved.
 
 # stop on most errors
 set -e
@@ -16,8 +14,8 @@ main ()
     local COMP DIRECTION
 
     if [ $# -ne 5 ]; then
-	usage "$0"
-	exit 1
+        usage "$0"
+        exit 1
     fi
 
     COMP=maxxeffect

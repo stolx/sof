@@ -23,14 +23,15 @@ function comparesize() {
   OUTPUT_SIZE=$2
   INPUT_SIZE_MIN=$(echo "$INPUT_SIZE*0.9/1"|bc)
   # echo "MIN SIZE with 90% tolerance is $INPUT_SIZE_MIN"
-  # echo "ACTUALL SIZE is $OUTPUT_SIZE"
+  echo "INPUT_SIZE is $INPUT_SIZE"
+  echo "OUTPUT_SIZE is $OUTPUT_SIZE"
   if [[ "$OUTPUT_SIZE" -gt "$INPUT_SIZE" ]]; then
-    echo "OUTPUT_SIZE $OUTPUT_SIZE too big"
-    return 1
+   echo "OUTPUT_SIZE $OUTPUT_SIZE too big"
+   return 1
   fi
   if [[ "$OUTPUT_SIZE" -lt "$INPUT_SIZE_MIN" ]]; then
-    echo "OUTPUT_SIZE $OUTPUT_SIZE too small"
-    return 1
+   echo "OUTPUT_SIZE $OUTPUT_SIZE too small"
+   return 1
   fi
 
   return 0
@@ -44,6 +45,33 @@ function srcsize() {
   echo "$OUTPUT_SIZE"
 }
 
+function do_test() {
+  WIDTH=$1
+  RATE=$2
+  INPUT=$3
+  OUTPUT=$4
+  LOG=$5
+
+  echo "=========================================================="
+  echo "./maxxeffect_run.sh " $WIDTH " " $WIDTH " " $RATE " " $INPUT " " $OUTPUT
+  if ./maxxeffect_run.sh $WIDTH $WIDTH $RATE  $INPUT $OUTPUT &>$LOG; then
+    echo "codec_adapter test passed!"
+  else
+    echo "codec_adapter test failed!"
+    cat $LOG
+    exit 1
+  fi
+  if comparesize "$(filesize $INPUT)" "$(filesize $OUTPUT)"; then
+    echo "codec_adapter_out size check passed!"
+  else
+    echo "codec_adapter_out size check failed!"
+    cat $LOG
+    exit 1
+  fi
+
+  return 0
+}
+
 SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
 SOF_DIR=$SCRIPTS_DIR/../
 TESTBENCH_DIR=${SOF_DIR}/tools/test/audio
@@ -54,50 +82,12 @@ cd "$TESTBENCH_DIR"
 # remove .raw and .log files from test folder
 rm -rf ./*.raw
 rm -rf ./*.log
+rm -rf ./outputs/
+mkdir ./outputs
 
-# test codec adapter 16 bit
-INPUT_FILE=./inputs/audio_16.raw
-OUTPUT_FILE=./codec_adapter_out_16.raw
-LOG_FILE=./ca16.log
-
-echo "=========================================================="
-echo "test codec adapter with ./maxxeffect_run.sh 16 16 48000 " $INPUT_FILE " " $OUTPUT_FILE
-if ./maxxeffect_run.sh 16 16 48000 $INPUT_FILE $OUTPUT_FILE &>$LOG_FILE; then
-  echo "codec_adapter test passed!"
-else
-  echo "codec_adapter test failed!"
-  cat $LOG_FILE
-  exit 1
-fi
-if comparesize "$(filesize $INPUT_FILE)" "$(filesize $OUTPUT_FILE)"; then
-  echo "codec_adapter_out size check passed!"
-else
-  echo "codec_adapter_out size check failed!"
-  cat $LOG_FILE
-  exit 1
-fi
-
-# test codec adapter 32 bit
-INPUT_FILE=./inputs/audio_32.raw
-OUTPUT_FILE=./codec_adapter_out_32.raw
-LOG_FILE=./ca32.log
-
-echo "=========================================================="
-echo "test codec adapter with ./maxxeffect_run.sh 32 32 48000 " $INPUT_FILE " " $OUTPUT_FILE
-if ./maxxeffect_run.sh 32 32 48000 $INPUT_FILE $OUTPUT_FILE &>$LOG_FILE; then
-  echo "codec_adapter test passed!"
-else
-  echo "codec_adapter test failed!"
-  cat $LOG_FILE
-  exit 1
-fi
-if comparesize "$(filesize $INPUT_FILE)" "$(filesize $OUTPUT_FILE)"; then
-  echo "codec_adapter_out size check passed!"
-else
-  echo "codec_adapter_out size check failed!"
-  cat $LOG_FILE
-  exit 1
-fi
-
-
-# rm volume_out.raw vol.log
+do_test 32 48000 ./inputs/sweep_2s_2ch_48000_32.raw     ./ca_sweep_2s_2ch_48000_32.raw     ./sweep_2s_2ch_48000_32.log
+do_test 24 48000 ./inputs/sweep_2s_2ch_48000_24_LE4.raw ./ca_sweep_2s_2ch_48000_24_LE4.raw ./sweep_2s_2ch_48000_24_LE4.log
+do_test 16 48000 ./inputs/sweep_2s_2ch_48000_16.raw     ./ca_sweep_2s_2ch_48000_16.raw     ./sweep_2s_2ch_48000_16.log
+do_test 32 44100 ./inputs/sweep_2s_2ch_44100_32.raw     ./ca_sweep_2s_2ch_44100_32.raw     ./sweep_2s_2ch_44100_32.log
+do_test 24 44100 ./inputs/sweep_2s_2ch_44100_24_LE4.raw ./ca_sweep_2s_2ch_44100_24_LE4.raw ./sweep_2s_2ch_44100_24_LE4.log
+do_test 16 44100 ./inputs/sweep_2s_2ch_44100_16.raw     ./ca_sweep_2s_2ch_44100_16.raw     ./sweep_2s_2ch_44100_16.log
