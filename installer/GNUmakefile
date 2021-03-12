@@ -12,9 +12,12 @@
 -include config.mk
 
 UNSIGNED_list ?= bdw byt cht
-SIGNED_list  ?= apl cnl icl jsl tgl
+SIGNED_list  ?= apl cnl icl jsl tgl tgl-h
 # older SOF versions
 # SIGNED_list += hsw kbl skl sue
+
+# In a Linux kernel git clone, try:
+#   git grep 'sof-.*\.ri' -- sound/soc/
 ALIAS_list ?= glk cfl cml ehl
 
 $(info UNSIGNED_list = ${UNSIGNED_list} )
@@ -76,6 +79,9 @@ INTEL_SIGNED	:= ${STAGING_SOF_VERSION}/intel-signed
 ${COMMUNITY} ${INTEL_SIGNED} ${BUILDS_ROOT} ${STAGING_SOF_VERSION}:
 	mkdir -p $@
 
+# The noise for incremental, do-nothing builds is incredible otherwise,
+# especially for build_tools
+GNUMAKEFLAGS = --no-print-directory
 
       #####################################
       ###    rsync to local or remote  ####
@@ -151,7 +157,7 @@ endif
 ${BUILD_SOF_RIS}: ${BUILDS_ROOT}/build_%_${TOOLCHAIN}/sof.ri: | ${BUILDS_ROOT}
 	cd ${BUILDS_ROOT} && bdir="$$(dirname $@)" &&  \
       if [ -d $${bdir} ] && [ xcc != "${TOOLCHAIN}" ] ; then \
-        cmake --build $${bdir} -- sof; else \
+        cmake --build $${bdir} -- bin; else \
       $(CURDIR)/../scripts/xtensa-build-all.sh $*; fi
 
 

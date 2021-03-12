@@ -16,6 +16,21 @@ PLATFORMS=()
 
 SOF_TOP=$(cd "$(dirname "$0")/.." && pwd)
 
+# As CMake forks one compiler process for each source file, the XTensa
+# compiler spends much more time idle waiting for the license server
+# over the network than actually using CPU or disk. A factor 3 has been
+# found optimal for 16 nproc 25ms away from the server; your mileage may
+# vary.
+#
+# The entire, purely local gcc build is so fast (~ 1s) that observing
+# any difference between -j nproc and -j nproc*N is practically
+# impossible so let's not waste RAM when building with gcc.
+
+if [ -n "$XTENSA_TOOLS_ROOT" ]; then
+    BUILD_JOBS=$((BUILD_JOBS * 3))
+fi
+
+
 die()
 {
 	>&2 printf '%s ERROR: ' "$0"
@@ -29,7 +44,7 @@ print_usage()
 {
     cat <<EOF
 Re-configures and re-builds SOF using the corresponding compiler and
-platform's _defconfig file.
+the <platform>_defconfig file.
 
 usage: $0 [options] platform(s)
 
@@ -45,8 +60,9 @@ usage: $0 [options] platform(s)
        -v Verbose Makefile log
        -j n Set number of make build jobs. Jobs=#cores when no flag. \
 Infinte when not specified.
-	-m path to MEU tool. Switches signing step to use MEU instead of rimage.
-           To use a non-default key define PRIVATE_KEY_OPTION, see below.
+       -m path to MEU tool. CMake disables rimage signing which produces a
+          .uns[igned] file signed by MEU. For a non-default key use the
+          PRIVATE_KEY_OPTION, see below.
 
 To use a non-default key you must define the right CMake parameter in the
 following environment variable:
@@ -164,35 +180,30 @@ do
 	case $platform in
 		byt)
 			PLATFORM="baytrail"
-			ARCH="xtensa"
 			XTENSA_CORE="Intel_HiFiEP"
 			HOST="xtensa-byt-elf"
 			XTENSA_TOOLS_VERSION="RD-2012.5-linux"
 			;;
 		cht)
 			PLATFORM="cherrytrail"
-			ARCH="xtensa"
 			XTENSA_CORE="CHT_audio_hifiep"
 			HOST="xtensa-byt-elf"
 			XTENSA_TOOLS_VERSION="RD-2012.5-linux"
 			;;
 		bdw)
 			PLATFORM="broadwell"
-			ARCH="xtensa"
 			XTENSA_CORE="LX4_langwell_audio_17_8"
 			HOST="xtensa-hsw-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		hsw)
 			PLATFORM="haswell"
-			ARCH="xtensa"
 			XTENSA_CORE="LX4_langwell_audio_17_8"
 			HOST="xtensa-hsw-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		apl)
 			PLATFORM="apollolake"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="X4H3I16w2D48w3a_2017_8"
 
 			# test APL compiler aliases and ignore set -e here
@@ -207,7 +218,6 @@ do
 			;;
 		skl)
 			PLATFORM="skylake"
-			ARCH="xtensa"
 			XTENSA_CORE="X4H3I16w2D48w3a_2017_8"
 
 			# test APL compiler aliases and ignore set -e here
@@ -222,7 +232,6 @@ do
 			;;
 		kbl)
 			PLATFORM="kabylake"
-			ARCH="xtensa"
 			XTENSA_CORE="X4H3I16w2D48w3a_2017_8"
 
 			# test APL compiler aliases and ignore set -e here
@@ -237,7 +246,6 @@ do
 			;;
 		cnl)
 			PLATFORM="cannonlake"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="X6H3CNL_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -245,7 +253,6 @@ do
 			;;
 		sue)
 			PLATFORM="suecreek"
-			ARCH="xtensa"
 			XTENSA_CORE="X6H3CNL_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -253,7 +260,6 @@ do
 			;;
 		icl)
 			PLATFORM="icelake"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="X6H3CNL_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -261,7 +267,6 @@ do
 			;;
 		tgl)
 			PLATFORM="tgplp"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="cavs2x_LX6HiFi3_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -274,7 +279,6 @@ do
 			;;
 		tgl-h)
 			PLATFORM="tgph"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="cavs2x_LX6HiFi3_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -287,7 +291,6 @@ do
 			;;
 		jsl)
 			PLATFORM="jasperlake"
-			ARCH="xtensa-smp"
 			XTENSA_CORE="X6H3CNL_2017_8"
 			HOST="xtensa-cnl-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -295,21 +298,18 @@ do
 			;;
 		imx8)
 			PLATFORM="imx8"
-			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		imx8x)
 			PLATFORM="imx8x"
-			ARCH="xtensa"
 			XTENSA_CORE="hifi4_nxp_v3_3_1_2_dev"
 			HOST="xtensa-imx-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
 			;;
 		imx8m)
 			PLATFORM="imx8m"
-			ARCH="xtensa"
 			XTENSA_CORE="hifi4_mscale_v0_0_2_prod"
 			HOST="xtensa-imx8m-elf"
 			XTENSA_TOOLS_VERSION="RG-2017.8-linux"
@@ -326,12 +326,8 @@ do
 		if [ -d "$XTENSA_TOOLS_DIR" ]
 			then
 				XCC="xt-xcc"
-				XTOBJCOPY="xt-objcopy"
-				XTOBJDUMP="xt-objdump"
 			else
 				XCC="none"
-				XTOBJCOPY="none"
-				XTOBJDUMP="none"
 				>&2 printf 'WARNING: %s
 \t is not a directory, reverting to gcc\n' "$XTENSA_TOOLS_DIR"
 		fi
@@ -346,6 +342,7 @@ do
 		TOOLCHAIN=xt
 		ROOT="$XTENSA_BUILDS_DIR/$XTENSA_CORE/xtensa-elf"
 		export XTENSA_SYSTEM=$XTENSA_BUILDS_DIR/$XTENSA_CORE/config
+		printf 'XTENSA_SYSTEM=%s\n' "${XTENSA_SYSTEM}"
 		PATH=$XTENSA_TOOLS_DIR/XtensaTools/bin:$OLDPATH
 		COMPILER="xcc"
 	else
