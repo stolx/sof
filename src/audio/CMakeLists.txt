@@ -145,38 +145,42 @@ foreach(audio_module ${sof_audio_modules})
 	endforeach()
 endforeach()
 
+# add Waves codec a sof_audio_add_module
 if(CONFIG_LIBRARY)
-	# To link dummy instead of MaxxChrome lib - add DUMMY_SOURCES to sof_codec_adapter local sources
-	# set(DUMMY_SOURCES
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Dummy.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Process/Dummy_Process.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Process/Dummy_Reset.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Initialize/Dummy_Effect_Initialize.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Coefficient.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Deferred.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Meters.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Parameter.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/Direct/Dummy_Revision.c
-	# 	${CMAKE_CURRENT_LIST_DIR}/codec_adapter/codec/Dummy/Control/RPC/Dummy_RPC_Server.c)
-
 	add_library(sof_codec_adapter MODULE "")
 	target_link_libraries(sof_codec_adapter PRIVATE sof_options)
 	target_link_libraries(sof_codec_adapter PRIVATE -Wl,--export-dynamic)
 	target_compile_options(sof_codec_adapter PRIVATE)
 	set_property(TARGET sof_codec_adapter PROPERTY POSITION_INDEPENDENT_CODE ON)
-	add_local_sources(sof_codec_adapter codec_adapter/codec_adapter.c
+
+	add_local_sources(sof_codec_adapter
+		codec_adapter/codec_adapter.c
 		codec_adapter/codec/waves.c
 		codec_adapter/codec/generic.c)
 
-	target_link_libraries(sof_codec_adapter PRIVATE ${CMAKE_CURRENT_LIST_DIR}/codec_adapter/maxxeffect_sof/lib/native/release/libMaxxChrome.a)
+if(WAVES_CODEC_DUMMY)
+	# enabling WAVES_CODEC_DUMMY will build mock MaxxEffect implementation
+	# that has no audio processing algorithms and is used for debug purposes
 
-	# Waves interface needs relative path starting from parent directory of MaxxEffect folder
-	# Adding folder with Waves interface to includes
-	# to be fixed
-	target_include_directories(sof_codec_adapter PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../include/sof/audio/waves)
+	set(DUMMY_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Dummy.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Process/Dummy_Process.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Process/Dummy_Reset.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Initialize/Dummy_Effect_Initialize.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Initialize/Dummy_Effect_InitializeFromScenario.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/Direct/Dummy_Coefficient.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/Direct/Dummy_Deferred.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/Direct/Dummy_Meters.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/Direct/Dummy_Parameter.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/Direct/Dummy_Revision.c
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/Dummy/Control/RPC/Dummy_RPC_Server.c)
+	add_local_sources(sof_codec_adapter ${DUMMY_SOURCES})
+else()
+	target_link_libraries(sof_codec_adapter PRIVATE
+		${CMAKE_CURRENT_LIST_DIR}/codec_adapter/maxxeffect_sof/lib_native/release/libMaxxChrome.a)
+endif()
+
 	sof_append_relative_path_definitions(sof_codec_adapter)
-
 	install(TARGETS sof_codec_adapter DESTINATION lib)
 
 endif()
