@@ -292,9 +292,46 @@ err:
 	return ret;
 }
 
+int cadence_codec_init_process(struct comp_dev *dev)
+{
+	int ret;
+	struct codec_data *codec = comp_get_codec(dev);
+	struct cadence_codec_data *cd = codec->private;
+
+	API_CALL(cd, XA_API_CMD_SET_INPUT_BYTES, 0, &codec->cpd.avail, ret);
+	if (ret != LIB_NO_ERROR) {
+		comp_err(dev, "cadence_codec_init_process() error %x: failed to set size of input data",
+			 ret);
+		return ret;
+	}
+
+	API_CALL(cd, XA_API_CMD_INIT, XA_CMD_TYPE_INIT_PROCESS, NULL, ret);
+	if (ret != LIB_NO_ERROR) {
+		comp_err(dev, "cadence_codec_init_process() error %x: failed to initialize codec",
+			 ret);
+		return ret;
+	}
+
+	API_CALL(cd, XA_API_CMD_INIT, XA_CMD_TYPE_INIT_DONE_QUERY,
+		 &codec->cpd.init_done, ret);
+	if (ret != LIB_NO_ERROR) {
+		comp_err(dev, "cadence_codec_init_process() error %x: failed to get lib init status",
+			 ret);
+		return ret;
+	}
+
+	API_CALL(cd, XA_API_CMD_GET_CURIDX_INPUT_BUF, 0, &codec->cpd.consumed, ret);
+	if (ret != LIB_NO_ERROR) {
+		comp_err(dev, "cadence_codec_init_process() error %x: could not get consumed bytes",
+			 ret);
+		return ret;
+	}
+
+	return 0;
+}
 int cadence_codec_prepare(struct comp_dev *dev)
 {
-	int ret = 0, mem_tabs_size, lib_init_status;
+	int ret = 0, mem_tabs_size;
 	struct codec_data *codec = comp_get_codec(dev);
 	struct cadence_codec_data *cd = codec->private;
 
@@ -362,26 +399,9 @@ int cadence_codec_prepare(struct comp_dev *dev)
 		goto free;
 	}
 
-	API_CALL(cd, XA_API_CMD_INIT, XA_CMD_TYPE_INIT_PROCESS, NULL, ret);
-	if (ret != LIB_NO_ERROR) {
-		comp_err(dev, "cadence_codec_prepare() error %x: failed to initialize codec",
-			 ret);
+	ret = cadence_codec_init_process(dev);
+	if (ret)
 		goto free;
-	}
-
-	API_CALL(cd, XA_API_CMD_INIT, XA_CMD_TYPE_INIT_DONE_QUERY,
-		 &lib_init_status, ret);
-	if (ret != LIB_NO_ERROR) {
-		comp_err(dev, "cadence_codec_prepare() error %x: failed to get lib init status",
-			 ret);
-		goto free;
-	} else if (!lib_init_status) {
-		comp_err(dev, "cadence_codec_prepare() error: lib has not been initiated properly");
-		ret = -EINVAL;
-		goto free;
-	} else {
-		comp_dbg(dev, "cadence_codec_prepare(): lib has been initialized properly");
-	}
 
 	comp_dbg(dev, "cadence_codec_prepare() done");
 	return 0;
@@ -417,6 +437,13 @@ int cadence_codec_process(struct comp_dev *dev)
 	API_CALL(cd, XA_API_CMD_GET_OUTPUT_BYTES, 0, &codec->cpd.produced, ret);
 	if (ret != LIB_NO_ERROR) {
 		comp_err(dev, "cadence_codec_process() error %x: could not get produced bytes",
+			 ret);
+		goto err;
+	}
+
+	API_CALL(cd, XA_API_CMD_GET_CURIDX_INPUT_BUF, 0, &codec->cpd.consumed, ret);
+	if (ret != LIB_NO_ERROR) {
+		comp_err(dev, "cadence_codec_process() error %x: could not get consumed bytes",
 			 ret);
 		goto err;
 	}

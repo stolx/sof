@@ -49,6 +49,14 @@ struct codec_interface {
 	 */
 	int (*prepare)(struct comp_dev *dev);
 	/**
+	 * Codec specific init processing procedure, called as a part of
+	 * codec_adapter component copy in .copy(). Typically in this
+	 * phase a processing algorithm searches for the valid header,
+	 * does header decoding to get the parameters and initializes
+	 * state and configuration structures.
+	 */
+	int (*init_process)(struct comp_dev *dev);
+	/**
 	 * Codec specific processing procedure, called as part of codec_adapter
 	 * component copy in .copy(). This procedure is responsible to consume
 	 * samples provided by the codec_adapter and produce/output the processed
@@ -159,7 +167,9 @@ struct codec_processing_data {
 	uint32_t in_buff_size; /**< Specifies the size of codec input buffer. */
 	uint32_t out_buff_size; /**< Specifies the size of codec output buffer.*/
 	uint32_t avail; /**< Specifies how much data is available for codec to process.*/
-	uint32_t produced; /**< Specifies how much data the codec processed in its last task.*/
+	uint32_t produced; /**< Specifies how much data the codec produced in its last task.*/
+	uint32_t consumed; /**< Specified how much data the codec consumed in its last task */
+	uint32_t init_done; /**< Specifies if the codec initialization is finished */
 	void *in_buff; /**< A pointer to codec input buffer. */
 	void *out_buff; /**< A pointer to codec output buffer. */
 };
@@ -201,6 +211,7 @@ void *codec_allocate_memory(struct comp_dev *dev, uint32_t size,
 int codec_free_memory(struct comp_dev *dev, void *ptr);
 void codec_free_all_memory(struct comp_dev *dev);
 int codec_prepare(struct comp_dev *dev);
+int codec_init_process(struct comp_dev *dev);
 int codec_process(struct comp_dev *dev);
 int codec_apply_runtime_config(struct comp_dev *dev);
 int codec_reset(struct comp_dev *dev);

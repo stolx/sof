@@ -139,8 +139,8 @@ static int load_setup_config(struct comp_dev *dev, void *cfg, uint32_t size)
 			 (uintptr_t)cfg, size);
 		ret = -EINVAL;
 		goto end;
-	} else if (size <= sizeof(struct ca_config)) {
-		comp_err(dev, "load_setup_config(): no codec config available.");
+	} else if (size < sizeof(struct ca_config)) {
+		comp_err(dev, "load_setup_config(): no codec config available, size %d", size);
 		ret = -EIO;
 		goto end;
 	}
@@ -154,13 +154,15 @@ static int load_setup_config(struct comp_dev *dev, void *cfg, uint32_t size)
 		goto end;
 	}
 	/* Copy codec specific part */
-	lib_cfg = (char *)cfg + sizeof(struct ca_config);
 	lib_cfg_size = size - sizeof(struct ca_config);
-	ret = codec_load_config(dev, lib_cfg, lib_cfg_size, CODEC_CFG_SETUP);
-	if (ret) {
-		comp_err(dev, "load_setup_config(): %d: failed to load setup config for codec id %x",
-			 ret, cd->ca_config.codec_id);
-		goto end;
+	if (lib_cfg_size) {
+		lib_cfg = (char *)cfg + sizeof(struct ca_config);
+		ret = codec_load_config(dev, lib_cfg, lib_cfg_size, CODEC_CFG_SETUP);
+		if (ret) {
+			comp_err(dev, "load_setup_config(): %d: failed to load setup config for codec id %x",
+				 ret, cd->ca_config.codec_id);
+			goto end;
+		}
 	}
 
 	comp_dbg(dev, "load_setup_config() done.");
@@ -364,7 +366,7 @@ static void generate_zeroes(struct comp_buffer *sink, uint32_t bytes)
 static int codec_adapter_copy(struct comp_dev *dev)
 {
 	int ret = 0;
-	uint32_t bytes_to_process, copy_bytes, processed = 0;
+	uint32_t bytes_to_process, copy_bytes, processed = 0, produced = 0;
 	struct comp_data *cd = comp_get_drvdata(dev);
 	struct codec_data *codec = &cd->codec;
 	struct comp_buffer *source = cd->ca_source;
@@ -378,6 +380,22 @@ static int codec_adapter_copy(struct comp_dev *dev)
 
 	comp_dbg(dev, "codec_adapter_copy() start: codec_buff_size: %d, local_buff free: %d source avail %d",
 		 codec_buff_size, local_buff->stream.free, source->stream.avail);
+
+	if (!codec->cpd.init_done) {
+		if (bytes_to_process < codec_buff_size)
+			goto db_verify;
+
+		buffer_invalidate(source, codec_buff_size);
+		codec_adapter_copy_from_source_to_lib(&source->stream, &codec->cpd,
+						      codec_buff_size);
+		codec->cpd.avail = codec_buff_size;
+		ret = codec_init_process(dev);
+		if (ret)
+			return ret;
+
+		bytes_to_process -= codec->cpd.consumed;
+		comp_update_buffer_consume(source, codec->cpd.consumed);
+	}
 
 	while (bytes_to_process) {
 		/* Proceed only if we have enough data to fill the lib buffer
@@ -407,18 +425,19 @@ static int codec_adapter_copy(struct comp_dev *dev)
 		codec_adapter_copy_from_lib_to_sink(&codec->cpd, &local_buff->stream,
 						    codec->cpd.produced);
 
-		bytes_to_process -= codec->cpd.produced;
-		processed += codec->cpd.produced;
+		bytes_to_process -= codec->cpd.consumed;
+		processed += codec->cpd.consumed;
+		produced += codec->cpd.produced;
 	}
 
-	if (!processed && !cd->deep_buff_bytes) {
+	if (!produced && !cd->deep_buff_bytes) {
 		comp_dbg(dev, "codec_adapter_copy(): nothing processed in this call");
 		goto end;
-	} else if (!processed && cd->deep_buff_bytes) {
+	} else if (!produced && cd->deep_buff_bytes) {
 		goto db_verify;
 	}
 
-	audio_stream_produce(&local_buff->stream, processed);
+	audio_stream_produce(&local_buff->stream, produced);
 	comp_update_buffer_consume(source, processed);
 
 db_verify:
