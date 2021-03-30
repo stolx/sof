@@ -45,7 +45,7 @@ int dummy_codec_process(struct comp_dev *dev)
 	struct codec_data *codec = comp_get_codec(dev);
 	struct comp_data *cd = comp_get_drvdata(dev);
 
-	comp_dbg(dev, "dummy_codec_process()");
+	comp_info(dev, "dummy_codec_process()");
 
 	memcpy_s(codec->cpd.out_buff, codec->cpd.out_buff_size,
 		 codec->cpd.in_buff, codec->cpd.in_buff_size);
